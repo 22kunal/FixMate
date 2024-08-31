@@ -1,4 +1,3 @@
-import React from 'react';
 import '/src/styles/TopCategory.css';
 import electrician from '../assets/homePage/electrician.jpg';
 import plumber from '../assets/homePage/plumbing.jpg';
@@ -9,7 +8,7 @@ function TopCategory() {
   return (
     <div>
       <div className='heading'>
-        <h1>Best services</h1>
+        <h1>Most Booked services</h1>
       </div>
 
       <div className='best_service'>
