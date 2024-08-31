@@ -1,13 +1,52 @@
 import { FaRegUser } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
-import { useState } from "react";
+import { useState,useEffect } from "react";
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false); 
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [userName, setUserName] = useState(""); 
+
+  useEffect(() => {
+    const token = localStorage.getItem("jwtToken");
+    if (token) {
+      // Validate token
+      fetch("http://localhost:5000/api/auth/validate", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      })
+        .then((response) => {
+          if (response.ok) {
+            // Token is valid
+            console.log(response);
+            return response.json();
+          } else {
+            // Token is invalid
+            throw new Error("Invalid token");
+          }
+        })
+        .then((data) => {
+          setIsLoggedIn(true);
+          console.log(data);
+          setUserName(data.name); 
+        })
+        .catch(() => {
+          localStorage.removeItem("jwtToken"); 
+        });
+    }
+  }, []);
 
   const toggleModal = () => {
     setIsModalOpen(!isModalOpen);
@@ -23,14 +62,54 @@ const Navbar = () => {
     if (isLoggedIn) {
       setIsLoggedIn(false);
       setIsDropdownOpen(false);
+      setUserName(""); // Clear the user's name on logout
+      localStorage.removeItem("jwtToken"); // Remove JWT from local storage
     } else {
       setIsSignInModalOpen(true); // Open the sign-in modal
     }
   };
 
-  const handleSignIn = () => {
-    setIsLoggedIn(true);
-    setIsSignInModalOpen(false); // Close the sign-in modal
+  const handleSignIn = async () => {
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/signin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+      if (response.ok) {
+        const { token, name } = await response.json();
+        localStorage.setItem("jwtToken", token); // Save JWT in local storage
+        setUserName(name); // Set the user's name
+        setIsLoggedIn(true);
+        setIsSignInModalOpen(false); // Close the sign-in modal
+      } else {
+        console.error("Failed to sign in");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
+
+  const handleSignUp = async () => {
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: fullName, email, password }),
+      });
+      if (response.ok) {
+        setIsSignUpModalOpen(false); // Close the sign-up modal
+        setIsSignInModalOpen(true); // Open the sign-in modal
+      } else {
+        console.error("Failed to sign up");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
   };
 
   const closeSignInModal = () => {
@@ -75,7 +154,11 @@ const Navbar = () => {
 
       {/* Icons */}
       <div className="navbar-icons" onClick={toggleDropdown}>
-        {!isLoggedIn && (
+        {isLoggedIn ? (
+          <span className="login-button">
+            {userName} 
+          </span>
+        ) : (
           <span className="login-button" onClick={handleLoginLogout}>
             Sign In
           </span>
@@ -112,7 +195,11 @@ const Navbar = () => {
           <a
             href="#"
             className="dropdown-item"
-            onClick={() => setIsLoggedIn(false)}
+            onClick={() => {
+              setIsLoggedIn(false);
+              setUserName(""); // Clear the user's name
+              localStorage.removeItem("jwtToken"); // Remove JWT from local storage
+            }}
           >
             Logout
           </a>
@@ -130,11 +217,15 @@ const Navbar = () => {
               type="text"
               placeholder="Enter your email"
               className="sign-in-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <input
               type="password"
               placeholder="Enter your password"
               className="sign-in-input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <button className="modal-button" onClick={openSignUpModal}>
               Sign Up
@@ -157,23 +248,31 @@ const Navbar = () => {
               type="text"
               placeholder="Enter your full name"
               className="sign-up-input"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
             />
             <input
               type="email"
               placeholder="Enter your email"
               className="sign-up-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
             <input
               type="password"
               placeholder="Enter your password"
               className="sign-up-input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
             />
             <input
               type="password"
               placeholder="Confirm password"
               className="sign-up-input"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
-            <button className="modal-button" onClick={closeSignUpModal}>
+            <button className="modal-button" onClick={handleSignUp}>
               Sign Up
             </button>
           </div>
