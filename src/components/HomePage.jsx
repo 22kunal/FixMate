@@ -1,4 +1,3 @@
-import React from 'react'
 import '/src/styles/HomePage.css';
 import barber from '/src/assets/homePage/barber.jpg'
 import housekeeping from '/src/assets/homePage/housekeeping.jpg'
@@ -76,7 +75,7 @@ function HomePage() {
             <img src={massage} alt="Massage"></img>
           </div>
           <div className="home_image_3">
-            <img src={barberhome} alt="Barber"></img>
+            <img src={barberhome} style={{backgroundSize:'cover'}} alt="Barber"></img>
           </div>
           <div className="home_image_4">
             <img src={acservicehome} alt="Ac Repair"></img>
