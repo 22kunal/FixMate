@@ -12,6 +12,7 @@
   display: flex;
   align-items: center;
   font-size: 20px;
+  text-decoration: none;
 }
 
 .logo-icon {
@@ -24,6 +25,7 @@
 }
 
 .logo-text {
+  color: black;
   font-size: 25px;
   font-weight: 600;
 }
@@ -137,7 +139,7 @@
 .login-button{
   text-decoration: underline;
   position: absolute;
-  right: 12rem;
+  right: 6.5rem;
   top: 34px;
 }
 

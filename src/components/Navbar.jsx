@@ -1,6 +1,7 @@
 import { FaRegUser } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
 import { useState,useEffect } from "react";
+import {Link} from "react-router-dom";
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -127,16 +128,16 @@ const Navbar = () => {
   return (
     <nav className="navbar">
       {/* Logo */}
-      <div className="navbar-logo">
+      <Link to="/" className="navbar-logo">
         <div className="logo-icon">FM</div>
         <span className="logo-text">Fix Mate</span>
-      </div>
+      </Link>
 
       {/* Links */}
       <div className="navbar-links">
-        <a href="#">Beauty</a>
-        <a href="#">Homes</a>
-        <a href="#">Native</a>
+        <Link to="/ServiceWorker">Services</Link>
+        <Link to="/homes">Homes</Link>
+        <Link to="/native">Native</Link>
       </div>
 
       {/* Location and Search */}

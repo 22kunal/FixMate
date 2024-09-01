@@ -9,7 +9,7 @@ import { logoFacebook } from 'ionicons/icons'
 
 const Footer = () => {
   return (
-    <div className="footer_container">
+    <div className="footer_container" style={{padding: '22px 145px 0 145px'}}>
       <Seperator height={30} />
       <div
         style={{
