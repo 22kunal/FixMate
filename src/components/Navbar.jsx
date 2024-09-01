@@ -136,7 +136,7 @@ const Navbar = () => {
       {/* Links */}
       <div className="navbar-links">
         <Link to="/ServiceWorker">Services</Link>
-        <Link to="/homes">Homes</Link>
+        <Link to="/ComplainCreation">Complain</Link>
         <Link to="/native">Native</Link>
       </div>
 
