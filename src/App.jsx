@@ -4,6 +4,7 @@ import HomePage from './components/HomePage';
 import TopCategory from './components/TopCategory';
 import Footer from './components/Footer';
 import Navbar from './components/Navbar';
+import ComplainCreation from './components/ComplainCreation';
 import { BrowserRouter as Router,Route,Routes } from "react-router-dom";
 
 
@@ -25,6 +26,11 @@ function App(){
         <Route path="/ServiceWorker" 
         element={<ServiceWorker />} 
         />
+
+        <Route path="/ComplainCreation" 
+        element={<ComplainCreation/>} 
+        />
+        
       </Routes>
       <Footer/>
     </Router>
