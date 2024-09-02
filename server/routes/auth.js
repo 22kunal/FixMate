@@ -1,17 +1,43 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
+// const nodemailer = require("nodemailer");
 const User = require("../models/User");
 
 const router = express.Router();
+
+// const transporter = nodemailer.createTransport({
+//   service: "Gmail", 
+//   host: 'smtp.gmail.com',
+//   auth: {
+//     user: process.env.EMAIL_USER, // Your email address
+//     pass: process.env.EMAIL_PASS, // Your email password or app password
+//   },
+// });
+
+// // Generate random OTP
+// function generateOTP() {
+//   return (Math.random() * 4).toString();
+// }
 
 // Sign Up
 router.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
+    // const otp = generateOTP();
+    // const user = new User({ name, email, password, isVerified: false });
     const user = new User({ name, email, password });
     await user.save();
-    res.status(201).json({ message: "User registered" });
+
+    // Send OTP email
+    // await transporter.sendMail({
+    //   from: process.env.EMAIL_USER,
+    //   to: user.email,
+    //   subject: "Verify your email address",
+    //   html: `<p>Your OTP code is: <b>${otp}</b></p>`,
+    // });
+
+    res.status(201).json({ message: "User registered, please verify your email."});
     console.log("User registered");
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -28,6 +54,10 @@ router.post("/signin", async (req, res) => {
     if (!user || !(await user.comparePassword(password))) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
+
+    //  if (!user.isVerified) {
+    //   return res.status(403).json({ error: "Please verify your email to log in." });
+    // }
 
     const token = jwt.sign({ id: user._id,name:user.name }, process.env.JWT_SECRET, {
       expiresIn: "1h",
@@ -56,5 +86,35 @@ const authenticateToken = (req, res, next) => {
 router.post('/validate', authenticateToken, (req, res) => {
   res.json({ name: req.user.name }); 
 });
+
+// Verify email
+// router.post("/verify-otp", async (req, res) => {
+//   const { email, otp } = req.body;
+
+//   try {
+//     const user = await User.findOne({ email });
+
+//     if (!user) {
+//       return res.status(400).json({ error: "User not found." });
+//     }
+
+//     if (user.isVerified) {
+//       return res.status(400).json({ message: "User already verified." });
+//     }
+
+//     if (user.otp !== otp) {
+//       return res.status(400).json({ error: "Invalid OTP." });
+//     }
+
+//     // Verify the user's email
+//     user.isVerified = true;
+//     await user.save();
+
+//     res.json({ message: "Email verified successfully!" });
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// });
+
 
 module.exports = router;

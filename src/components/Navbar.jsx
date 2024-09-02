@@ -16,6 +16,36 @@ const Navbar = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
 
   const [userName, setUserName] = useState(""); 
+  const [location, setLocation] = useState("Select Location");
+  const [error, setError] = useState(null);
+
+  const [otp, setOtp] = useState("");
+  const [isOtpSent, setIsOtpSent] = useState(false);
+
+  const getLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(showPosition);
+    } else {
+      setError("Geolocation is not supported by this browser.");
+    }
+  };
+
+  const showPosition = async(position) => {
+   
+    const lat = position.coords.latitude;
+    const lon = position.coords.longitude;
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
+      );
+      const data = await response.json();
+      setLocation(data.address.city); 
+      console.log(data);
+    } catch (err) {
+      setError("Unable to retrieve address.");
+    }
+  };
 
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
@@ -105,6 +135,7 @@ const Navbar = () => {
       if (response.ok) {
         setIsSignUpModalOpen(false); // Close the sign-up modal
         setIsSignInModalOpen(true); // Open the sign-in modal
+        // setIsOtpSent(true);
       } else {
         console.error("Failed to sign up");
       }
@@ -125,6 +156,27 @@ const Navbar = () => {
     setIsSignUpModalOpen(false); // Close the sign-up modal
   };
 
+  // const handleVerifyOtp = async () => {
+  //   try {
+  //     const response = await fetch(
+  //       "http://localhost:5000/api/auth/verify-otp",
+  //       {
+  //         method: "POST",
+  //         headers: { "Content-Type": "application/json" },
+  //         body: JSON.stringify({ email, otp }),
+  //       }
+  //     );
+
+  //     if (response.ok) {
+  //       // Email verified, proceed further
+  //     } else {
+  //       console.error("Invalid OTP");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error:", error);
+  //   }
+  // };
+
   return (
     <nav className="navbar">
       {/* Logo */}
@@ -135,16 +187,16 @@ const Navbar = () => {
 
       {/* Links */}
       <div className="navbar-links">
+        <Link to="/">Home</Link>
         <Link to="/ServiceWorker">Services</Link>
         <Link to="/ComplainCreation">Complain</Link>
-        <Link to="/native">Native</Link>
       </div>
 
       {/* Location and Search */}
       <div className="search">
-        <div className="location" onClick={toggleModal}>
+        <div className="location" onClick={getLocation}>
           <span className="location-icon">📍</span>
-          <span>Near Neelam, Rajpura</span>
+          <span>{error ? error : location}</span>
           <span className="dropdown-arrow">▼</span>
         </div>
         <div className="navbar-search">
@@ -156,9 +208,7 @@ const Navbar = () => {
       {/* Icons */}
       <div className="navbar-icons" onClick={toggleDropdown}>
         {isLoggedIn ? (
-          <span className="login-button">
-            {userName} 
-          </span>
+          <span className="login-button">{userName}</span>
         ) : (
           <span className="login-button" onClick={handleLoginLogout}>
             Sign In
@@ -167,7 +217,7 @@ const Navbar = () => {
         <FaRegUser style={{ fontSize: "25px" }} />
       </div>
 
-      {/* Modal */}
+      {/* Modal
       {isModalOpen && (
         <div className="modal-overlay" onClick={toggleModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -182,7 +232,7 @@ const Navbar = () => {
             </button>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Dropdown */}
       {isDropdownOpen && isLoggedIn && (
@@ -279,6 +329,19 @@ const Navbar = () => {
           </div>
         </div>
       )}
+
+      {/* {isOtpSent && (
+        <div>
+          <input
+            type="text"
+            placeholder="Enter OTP"
+            value={otp}
+            onChange={(e) => setOtp(e.target.value)}
+          />
+          <button onClick={handleVerifyOtp}>Verify OTP</button>
+        </div>
+      )} */}
+
     </nav>
   );
 };
