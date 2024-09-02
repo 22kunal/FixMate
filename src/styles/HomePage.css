@@ -5,7 +5,7 @@
     display: grid;
     grid-template-columns: repeat(2,1fr);
     height: 34rem;
-    width: 78rem;
+    /* width: 78rem; */
     margin: 60px 0;
 }
 

@@ -65,7 +65,7 @@
   display: flex;
   align-items: center;
   cursor: pointer;
-
+  width: 12rem;
 }
 
 .location-icon {
@@ -139,7 +139,7 @@
 .login-button{
   text-decoration: underline;
   position: absolute;
-  right: 6.5rem;
+  right: 12.5rem;
   top: 34px;
 }
 
