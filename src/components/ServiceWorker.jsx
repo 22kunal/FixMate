@@ -25,7 +25,7 @@ function ServiceWorker() {
       }
     }
     fetchData();
-  }, [upcomingWork]);
+  }, []);
 
   return (
     <div className="page-container">
@@ -60,7 +60,7 @@ function ServiceWorker() {
       </div>
 
       <div className="upcoming-work-section">
-        {upcomingWork ? (
+        {upcomingWork.length>0 ? (
           upcomingWork.map((work, index) => (
             <div className="work-item" key={index}>
               <div className="work-image">

@@ -1,7 +1,10 @@
 import { FaRegUser } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
 import { useState,useEffect } from "react";
-import {Link} from "react-router-dom";
+import { Link } from "react-router-dom";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -41,6 +44,7 @@ const Navbar = () => {
       );
       const data = await response.json();
       setLocation(data.name); 
+      toast.success("Loaction updated")
       console.log(data);
     } catch (err) {
       setError("Unable to retrieve address.");
@@ -61,7 +65,7 @@ const Navbar = () => {
         .then((response) => {
           if (response.ok) {
             // Token is valid
-            console.log(response);
+            toast.success("jwt logged in successfully");
             return response.json();
           } else {
             // Token is invalid
@@ -70,7 +74,6 @@ const Navbar = () => {
         })
         .then((data) => {
           setIsLoggedIn(true);
-          console.log(data);
           setUserName(data.name); 
         })
         .catch(() => {
@@ -95,6 +98,7 @@ const Navbar = () => {
       setIsDropdownOpen(false);
       setUserName(""); // Clear the user's name on logout
       localStorage.removeItem("jwtToken"); // Remove JWT from local storage
+      toast.info("Log out successfully");
     } else {
       setIsSignInModalOpen(true); // Open the sign-in modal
     }
@@ -113,8 +117,11 @@ const Navbar = () => {
         setUserName(name); // Set the user's name
         setIsLoggedIn(true);
         setIsSignInModalOpen(false); // Close the sign-in modal
+        setIsDropdownOpen(false); // Close the dropdown
+        toast.success("Sign in successfully");
       } else {
-        console.error("Failed to sign in");
+        const error = await response.json();
+        toast.error(error.error);
       }
     } catch (error) {
       console.error("Error:", error);
@@ -123,7 +130,7 @@ const Navbar = () => {
 
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
-      alert("Passwords do not match");
+      toast.error("Passwords do not match");
       return;
     }
     try {
@@ -136,8 +143,9 @@ const Navbar = () => {
         // setIsOtpSent(true);
         setIsSignUpModalOpen(false); // Close the sign-up modal
         setIsSignInModalOpen(true); // Open the sign-in modal
+        toast.success("Account created successfully");
       } else {
-        console.error("Failed to sign up");
+        toast.error("Account exists");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -250,6 +258,7 @@ const Navbar = () => {
               setIsLoggedIn(false);
               setUserName(""); // Clear the user's name
               localStorage.removeItem("jwtToken"); // Remove JWT from local storage
+              toast.info("Logged out successfully");
             }}
           >
             Logout
