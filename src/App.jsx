@@ -6,39 +6,41 @@ import Footer from './components/Footer';
 import Navbar from './components/Navbar';
 import ComplainCreation from './components/ComplainCreation';
 import { BrowserRouter as Router,Route,Routes } from "react-router-dom";
-
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App(){
-  return(
+  return (
     <>
-    <Router>
-      <Navbar/>
-      <Routes>
-        <Route path="/" 
-        element={
-          <>
-          <HomePage/>
-          <TopCategory />
-          </>
-        }
-        />
+      <Router>
+        <Navbar />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <>
+                <HomePage />
+                <TopCategory />
+              </>
+            }
+          />
 
-        <Route path="/ServiceWorker" 
-        element={<ServiceWorker />} 
-        />
+          <Route path="/ServiceWorker" element={<ServiceWorker />} />
 
-        <Route path="/ComplainCreation" 
-        element={<ComplainCreation/>} 
-        />
-        
-      </Routes>
-      <Footer/>
-    </Router>
-      
-
-      
+          <Route path="/ComplainCreation" element={<ComplainCreation />} />
+        </Routes>
+        <Footer />
+      </Router>
+      <ToastContainer
+        autoClose={1000}
+        pauseOnHover={false}
+        limit={1}
+        hideProgressBar={false}
+        closeButton={false}
+        position="top-center"
+      />
     </>
-    )
+  );
   }
 
 export default App;
