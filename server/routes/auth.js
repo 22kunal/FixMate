@@ -1,40 +1,44 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-// const nodemailer = require("nodemailer");
+const nodemailer = require("nodemailer");
 const User = require("../models/User");
 
 const router = express.Router();
 
 // const transporter = nodemailer.createTransport({
-//   service: "Gmail", 
 //   host: 'smtp.gmail.com',
+//   port: 587,
+//   secure: false,
 //   auth: {
 //     user: process.env.EMAIL_USER, // Your email address
 //     pass: process.env.EMAIL_PASS, // Your email password or app password
 //   },
+//   tls: {
+//     rejectUnauthorized: false,
+//   },
 // });
 
-// // Generate random OTP
-// function generateOTP() {
-//   return (Math.random() * 4).toString();
-// }
+// Generate random OTP
+function generateOTP() {
+  return (Math.random() * 4).toString();
+}
 
 // Sign Up
 router.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    // const otp = generateOTP();
-    // const user = new User({ name, email, password, isVerified: false });
-    const user = new User({ name, email, password });
+    const otp = generateOTP();
+    const user = new User({ name, email, password, isVerified: false });
+    // const user = new User({ name, email, password });
     await user.save();
 
     // Send OTP email
-    // await transporter.sendMail({
+    // transporter.sendMail({
     //   from: process.env.EMAIL_USER,
     //   to: user.email,
     //   subject: "Verify your email address",
-    //   html: `<p>Your OTP code is: <b>${otp}</b></p>`,
+    //   text: `<p>Your OTP code is: <b>${otp}</b></p>`,
     // });
 
     res.status(201).json({ message: "User registered, please verify your email."});
