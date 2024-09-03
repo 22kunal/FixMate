@@ -1,86 +1,96 @@
-import React from 'react'
+import React,{useState,useEffect} from 'react'
 import '/src/styles/ServiceWorker.css';
 import electrician from '/src/assets/homePage/electrician.jpg'
 
 
 function ServiceWorker() {
+
+  const [workerDetails, setWorkerDetails] = useState({});
+  const [upcomingWork, setUpcomingWork] = useState([]);
+
+  useEffect(() => {
+    // Fetch upcoming work
+    const fetchData = async () => {
+      const response = await fetch("http://localhost:5000/api/upcoming-work", {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setUpcomingWork(data);
+        console.log("fetched successfully");
+      } else {
+        console.error("Failed to fetch data");
+      }
+    }
+    fetchData();
+  }, [upcomingWork]);
+
   return (
-    <div>
-        <div className='work_handle'>
-            <div className='worker_content'>
-              <div className='worker_detail'>
-
-                <div className='worker_image'>
-                  <img src={electrician} alt='Worker Image'></img>
-                </div>
-
-                <div className="worker_name">
-                  <h1><b>Manoj</b></h1>
-                </div>
-
-                <div className="worker_progress">
-
-                  <div className='worker_pending'>
-                    <h2>Pending: <span>0</span></h2>
-                  </div>
-
-                  <div className="worker_completed">
-                    <h2>Completed: <span>0</span></h2>
-                  </div>
-
-                  <div className="worker_canceled">
-                    <h2>Canceled: <span>0</span></h2>
-                  </div>
-
-                </div>
-
-              </div>
-
+    <div className="page-container">
+      <div className="worker-details-section">
+        <div className="worker-info">
+          <div className="worker-image">
+            <img src={electrician} alt="Worker" />
+          </div>
+          <div className="worker-name">
+            <h1>
+              <strong>Manoj</strong>
+            </h1>
+          </div>
+          <div className="worker-stats">
+            <div className="stat-item">
+              <h2>
+                Pending: <span>0</span>
+              </h2>
             </div>
-
-            <div className='work_detail_content'>
-              <div className='work_get'>
-
-                  <div className="work_image">
-                    <img src={electrician} alt='Worker Image'></img>
-                  </div>
-
-                  <div className="work_detail">
-                    <div className="work_name">
-                      <div className="work_own_name">
-                        <h3>Kundan Don</h3>
-                      </div>
-
-                      <div className="work_location">
-                        <h3>Jharkhand</h3>
-                      </div>
-
-                    </div>
-
-                    <div className="work_description">
-                      <h5>Description:</h5>
-                      <div className='text_description'>
-                        <p>Hello i love eating ducks</p>
-                      </div>
-                    </div>
-
-                    <div className="work_category">
-                        <div className='category_name'>
-                          <h5>Electrician</h5>
-                        </div>
-                        <div className='work_choice'>
-                          <button className='work_accept'>Accept</button>
-                          <button className='work_reject'>Reject</button>
-                        </div>
-                    </div>
-
-                  </div>
-
-              </div>
+            <div className="stat-item">
+              <h2>
+                Completed: <span>0</span>
+              </h2>
             </div>
+            <div className="stat-item">
+              <h2>
+                Canceled: <span>0</span>
+              </h2>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="upcoming-work-section">
+        {upcomingWork ? (
+          upcomingWork.map((work, index) => (
+            <div className="work-item" key={index}>
+              <div className="work-image">
+                <img src={electrician} alt="Work" />
+              </div>
+              <div className="work-details">
+                <div className="work-header">
+                  <h3 className="work-owner">{work.name}</h3>
+                  <h3 className="work-location">{work.address}</h3>
+                </div>
+                <div className="work-description">
+                  <h5>Description:</h5>
+                  <p>{work.description}</p>
+                </div>
+                <div className="work-category">
+                  <h5>{work.category||"electrician"}</h5>
+                  <div className="work-actions">
+                    <button className="btn-accept">Accept</button>
+                    <button className="btn-reject">Reject</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="no-work-message">No upcoming work available.</p>
+        )}
+      </div>
     </div>
-  )
+  );
 }
 
 export default ServiceWorker
