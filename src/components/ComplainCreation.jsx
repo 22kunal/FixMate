@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import '../styles/ComplainCreation.css';
+import { toast } from "react-toastify";
 
 const ComplainForm = () => {
   const [formData, setFormData] = useState({
@@ -46,6 +47,7 @@ const ComplainForm = () => {
         description: "",
         photo: null,
       });
+      toast.success("Complain submitted successfully");
     } else {
       console.error("Failed to submit complain");
     }
