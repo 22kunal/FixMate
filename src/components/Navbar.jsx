@@ -40,7 +40,7 @@ const Navbar = () => {
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
       );
       const data = await response.json();
-      setLocation(data.address.city); 
+      setLocation(data.name); 
       console.log(data);
     } catch (err) {
       setError("Unable to retrieve address.");
@@ -133,9 +133,9 @@ const Navbar = () => {
         body: JSON.stringify({ name: fullName, email, password }),
       });
       if (response.ok) {
+        // setIsOtpSent(true);
         setIsSignUpModalOpen(false); // Close the sign-up modal
         setIsSignInModalOpen(true); // Open the sign-in modal
-        // setIsOtpSent(true);
       } else {
         console.error("Failed to sign up");
       }
@@ -156,26 +156,26 @@ const Navbar = () => {
     setIsSignUpModalOpen(false); // Close the sign-up modal
   };
 
-  // const handleVerifyOtp = async () => {
-  //   try {
-  //     const response = await fetch(
-  //       "http://localhost:5000/api/auth/verify-otp",
-  //       {
-  //         method: "POST",
-  //         headers: { "Content-Type": "application/json" },
-  //         body: JSON.stringify({ email, otp }),
-  //       }
-  //     );
+  const handleVerifyOtp = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:5000/api/auth/verify-otp",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, otp }),
+        }
+      );
 
-  //     if (response.ok) {
-  //       // Email verified, proceed further
-  //     } else {
-  //       console.error("Invalid OTP");
-  //     }
-  //   } catch (error) {
-  //     console.error("Error:", error);
-  //   }
-  // };
+      if (response.ok) {
+        // Email verified, proceed further
+      } else {
+        console.error("Invalid OTP");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   return (
     <nav className="navbar">
@@ -327,10 +327,10 @@ const Navbar = () => {
               Sign Up
             </button>
           </div>
-        </div>
+        </div> 
       )}
 
-      {/* {isOtpSent && (
+      {isOtpSent && (
         <div>
           <input
             type="text"
@@ -340,7 +340,7 @@ const Navbar = () => {
           />
           <button onClick={handleVerifyOtp}>Verify OTP</button>
         </div>
-      )} */}
+      )} 
 
     </nav>
   );
