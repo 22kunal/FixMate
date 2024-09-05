@@ -25,6 +25,11 @@ const Navbar = () => {
   const [otp, setOtp] = useState("");
   const [isOtpSent, setIsOtpSent] = useState(false);
 
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const getLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(showPosition);
@@ -129,8 +134,18 @@ const Navbar = () => {
   };
 
   const handleSignUp = async () => {
+    if (!isValidEmail(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
     if (password !== confirmPassword) {
+      
       toast.error("Passwords do not match");
+      return;
+    }
+    if (password.length <8 || password.length>16) {
+      toast.error("Password must be between 8 and 16 characters.");
       return;
     }
     try {
@@ -190,7 +205,7 @@ const Navbar = () => {
       {/* Logo */}
       <Link to="/" className="navbar-logo">
         <div className="logo-icon">FM</div>
-        <span className="logo-text">Fix Mate</span>
+        <span className="logo-text">FixMate</span>
       </Link>
 
       {/* Links */}
@@ -207,10 +222,10 @@ const Navbar = () => {
           <span>{error ? error : location}</span>
           <span className="dropdown-arrow">▼</span>
         </div>
-        <div className="navbar-search">
+        {/* <div className="navbar-search">
           <CiSearch />
           <input type="text" placeholder="Search for ‘AC services’" />
-        </div>
+        </div> */}
       </div>
 
       {/* Icons */}
@@ -245,12 +260,12 @@ const Navbar = () => {
       {/* Dropdown */}
       {isDropdownOpen && isLoggedIn && (
         <div className="dropdown-menu">
-          <a href="#" className="dropdown-item">
+          {/* <a href="#" className="dropdown-item">
             Profile
           </a>
           <a href="#" className="dropdown-item">
             History
-          </a>
+          </a> */}
           <a
             href="#"
             className="dropdown-item"
@@ -302,7 +317,7 @@ const Navbar = () => {
           <div
             className="modal-content sign-up-modal"
             onClick={(e) => e.stopPropagation()}
-          >
+          > 
             <h2>Sign Up</h2>
             <input
               type="text"

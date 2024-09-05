@@ -28,7 +28,7 @@ router.post("/signup", async (req, res) => {
   const { name, email, password } = req.body;
 
   try {
-    const otp = generateOTP();
+    // const otp = generateOTP();
     const user = new User({ name, email, password, isVerified: false });
     // const user = new User({ name, email, password });
     await user.save();
@@ -48,7 +48,6 @@ router.post("/signup", async (req, res) => {
     console.error(err.message);
   }
 });
-
 // Sign In
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;

@@ -47,6 +47,7 @@
 .upcoming-work-section {
   flex: 2;
   display: flex;
+  overflow-y: scroll;
   flex-direction: column;
   gap: 20px;
 }

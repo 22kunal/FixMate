@@ -7,6 +7,7 @@ function ServiceWorker() {
 
   const [workerDetails, setWorkerDetails] = useState({});
   const [upcomingWork, setUpcomingWork] = useState([]);
+  
 
   useEffect(() => {
     // Fetch upcoming work
@@ -18,6 +19,7 @@ function ServiceWorker() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log('Fetched data:', data);
         setUpcomingWork(data);
         console.log("fetched successfully");
       } else {
@@ -42,7 +44,7 @@ function ServiceWorker() {
           <div className="worker-stats">
             <div className="stat-item">
               <h2>
-                Pending: <span>0</span>
+                Pending: <span>{upcomingWork.length}</span>
               </h2>
             </div>
             <div className="stat-item">
