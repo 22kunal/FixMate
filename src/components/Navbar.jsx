@@ -33,6 +33,11 @@ const Navbar = () => {
 
   const navigate = useNavigate();
 
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
   const getLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(showPosition);
@@ -138,7 +143,13 @@ const Navbar = () => {
   };
 
   const handleSignUp = async () => {
+    if (!isValidEmail(email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+
     if (password !== confirmPassword) {
+      
       toast.error("Passwords do not match");
       return;
     }
@@ -197,7 +208,7 @@ const Navbar = () => {
       {/* Logo */}
       <Link to="/" className="navbar-logo">
         <div className="logo-icon">FM</div>
-        <span className="logo-text">Fix Mate</span>
+        <span className="logo-text">FixMate</span>
       </Link>
 
       {/* Links */}
@@ -224,10 +235,10 @@ const Navbar = () => {
           <span>{error ? error : location}</span>
           <span className="dropdown-arrow">▼</span>
         </div>
-        <div className="navbar-search">
+        {/* <div className="navbar-search">
           <CiSearch />
           <input type="text" placeholder="Search for ‘AC services’" />
-        </div>
+        </div> */}
       </div>
 
       {/* Icons */}
@@ -253,8 +264,8 @@ const Navbar = () => {
             className="dropdown-item"
             onClick={() => {
               setIsLoggedIn(false);
-              setUserName(""); // Clear the user's name
-              localStorage.removeItem("jwtToken"); // Remove JWT from local storage
+              setUserName(""); 
+              localStorage.removeItem("jwtToken"); 
               toast.info("Logged out successfully");
               navigate("/");
             }}
@@ -300,7 +311,7 @@ const Navbar = () => {
           <div
             className="modal-content sign-up-modal"
             onClick={(e) => e.stopPropagation()}
-          >
+          > 
             <h2>Sign Up</h2>
             <input
               type="text"
