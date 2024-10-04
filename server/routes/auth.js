@@ -1,47 +1,38 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const nodemailer = require("nodemailer");
 const User = require("../models/User");
 
 const router = express.Router();
 
-// const transporter = nodemailer.createTransport({
-//   host: 'smtp.gmail.com',
-//   port: 587,
-//   secure: false,
-//   auth: {
-//     user: process.env.EMAIL_USER, // Your email address
-//     pass: process.env.EMAIL_PASS, // Your email password or app password
-//   },
-//   tls: {
-//     rejectUnauthorized: false,
-//   },
-// });
-
-// Generate random OTP
-function generateOTP() {
-  return (Math.random() * 4).toString();
-}
-
 // Sign Up
 router.post("/signup", async (req, res) => {
-  const { name, email, password } = req.body;
+  const {
+    name,
+    email,
+    password,
+    isVendor,
+    yearsOfExperience,
+    fieldsOfExpertise,
+  } = req.body;
 
   try {
-    // const otp = generateOTP();
-    const user = new User({ name, email, password, isVerified: false });
-    // const user = new User({ name, email, password });
-    await user.save();
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ error: "Account already exists" });
+    }
 
-    // Send OTP email
-    // transporter.sendMail({
-    //   from: process.env.EMAIL_USER,
-    //   to: user.email,
-    //   subject: "Verify your email address",
-    //   text: `<p>Your OTP code is: <b>${otp}</b></p>`,
-    // });
+    const newUser = new User({
+      name,
+      email,
+      password,
+      isVendor,
+      yearsOfExperience: isVendor ? yearsOfExperience : undefined,
+      fieldsOfExpertise: isVendor ? fieldsOfExpertise : undefined,
+    });
 
-    res.status(201).json({ message: "User registered, please verify your email."});
+    await newUser.save();
+
+    res.status(201).json({ message: "User registered" });
     console.log("User registered");
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -54,19 +45,27 @@ router.post("/signin", async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
+
     if (!user || !(await user.comparePassword(password))) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
 
-    //  if (!user.isVerified) {
-    //   return res.status(403).json({ error: "Please verify your email to log in." });
-    // }
+    const token = jwt.sign(
+      {
+        id: user._id,
+        name: user.name,
+        isVendor: user.isVendor, 
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "1h" }
+    );
 
-    const token = jwt.sign({ id: user._id,name:user.name }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+    return res.status(200).json({
+      token,
+      name: user.name,
+      isVendor: user.isVendor, 
+      id: user._id, 
     });
-    const name = user.name;
-    res.json({ token,name });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -87,37 +86,9 @@ const authenticateToken = (req, res, next) => {
 
 // Token validation route
 router.post('/validate', authenticateToken, (req, res) => {
-  res.json({ name: req.user.name }); 
+  res.json({ name: req.user.name,id:req.user.id,isVendor:req.user.isVendor }); 
 });
 
-// Verify email
-// router.post("/verify-otp", async (req, res) => {
-//   const { email, otp } = req.body;
-
-//   try {
-//     const user = await User.findOne({ email });
-
-//     if (!user) {
-//       return res.status(400).json({ error: "User not found." });
-//     }
-
-//     if (user.isVerified) {
-//       return res.status(400).json({ message: "User already verified." });
-//     }
-
-//     if (user.otp !== otp) {
-//       return res.status(400).json({ error: "Invalid OTP." });
-//     }
-
-//     // Verify the user's email
-//     user.isVerified = true;
-//     await user.save();
-
-//     res.json({ message: "Email verified successfully!" });
-//   } catch (err) {
-//     res.status(500).json({ error: err.message });
-//   }
-// });
 
 
 module.exports = router;

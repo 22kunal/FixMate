@@ -1,9 +1,11 @@
 import { FaRegUser } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
 import { useState,useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { useContext } from "react";
+import { AuthContext } from "../context/AuthContext";
 
 
 const Navbar = () => {
@@ -18,12 +20,18 @@ const Navbar = () => {
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const [userName, setUserName] = useState(""); 
+  const [userName, setUserName] = useState("");
   const [location, setLocation] = useState("Select Location");
   const [error, setError] = useState(null);
 
-  const [otp, setOtp] = useState("");
-  const [isOtpSent, setIsOtpSent] = useState(false);
+  const [isVendor, setIsVendor] = useState(false);
+  const [yearsOfExperience, setYearsOfExperience] = useState("");
+  const [fieldsOfExpertise, setFieldsOfExpertise] = useState("electrician");
+
+  const { handleLogin, handleLogout } = useContext(AuthContext);
+  const [Vendor, setVendor] = useState(false); 
+
+  const navigate = useNavigate();
 
   const isValidEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -38,8 +46,7 @@ const Navbar = () => {
     }
   };
 
-  const showPosition = async(position) => {
-   
+  const showPosition = async (position) => {
     const lat = position.coords.latitude;
     const lon = position.coords.longitude;
 
@@ -48,8 +55,8 @@ const Navbar = () => {
         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`
       );
       const data = await response.json();
-      setLocation(data.name); 
-      toast.success("Loaction updated")
+      setLocation(data.name);
+      toast.success("Loaction updated");
       console.log(data);
     } catch (err) {
       setError("Unable to retrieve address.");
@@ -70,7 +77,7 @@ const Navbar = () => {
         .then((response) => {
           if (response.ok) {
             // Token is valid
-            toast.success("jwt logged in successfully");
+            // toast.success("jwt logged in successfully");
             return response.json();
           } else {
             // Token is invalid
@@ -79,10 +86,12 @@ const Navbar = () => {
         })
         .then((data) => {
           setIsLoggedIn(true);
-          setUserName(data.name); 
+          setUserName(data.name);
+          setVendor(data.vendor);
+          // handleLogin(token, data.name, data.id, data.isVendor);
         })
         .catch(() => {
-          localStorage.removeItem("jwtToken"); 
+          localStorage.removeItem("jwtToken");
         });
     }
   }, []);
@@ -101,11 +110,10 @@ const Navbar = () => {
     if (isLoggedIn) {
       setIsLoggedIn(false);
       setIsDropdownOpen(false);
-      setUserName(""); // Clear the user's name on logout
-      localStorage.removeItem("jwtToken"); // Remove JWT from local storage
-      toast.info("Log out successfully");
+      setUserName("");
+      handleLogout();
     } else {
-      setIsSignInModalOpen(true); // Open the sign-in modal
+      setIsSignInModalOpen(true);
     }
   };
 
@@ -117,13 +125,14 @@ const Navbar = () => {
         body: JSON.stringify({ email, password }),
       });
       if (response.ok) {
-        const { token, name } = await response.json();
-        localStorage.setItem("jwtToken", token); // Save JWT in local storage
-        setUserName(name); // Set the user's name
+        const { token, name, isVendor, id } = await response.json();
+        localStorage.setItem("jwtToken", token);
+        handleLogin(token, name, id,isVendor);
+        setVendor(isVendor); 
+        setUserName(name);
         setIsLoggedIn(true);
-        setIsSignInModalOpen(false); // Close the sign-in modal
-        setIsDropdownOpen(false); // Close the dropdown
-        toast.success("Sign in successfully");
+        setIsSignInModalOpen(false);
+        setIsDropdownOpen(false);
       } else {
         const error = await response.json();
         toast.error(error.error);
@@ -144,20 +153,24 @@ const Navbar = () => {
       toast.error("Passwords do not match");
       return;
     }
-    if (password.length <8 || password.length>16) {
-      toast.error("Password must be between 8 and 16 characters.");
-      return;
-    }
+
+    const vendorData = isVendor ? { yearsOfExperience, fieldsOfExpertise } : {};
+
     try {
       const response = await fetch("http://localhost:5000/api/auth/signup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: fullName, email, password }),
+        body: JSON.stringify({
+          name: fullName,
+          email,
+          password,
+          isVendor,
+          ...vendorData,
+        }),
       });
       if (response.ok) {
-        // setIsOtpSent(true);
-        setIsSignUpModalOpen(false); // Close the sign-up modal
-        setIsSignInModalOpen(true); // Open the sign-in modal
+        setIsSignUpModalOpen(false);
+        setIsSignInModalOpen(true);
         toast.success("Account created successfully");
       } else {
         toast.error("Account exists");
@@ -167,36 +180,26 @@ const Navbar = () => {
     }
   };
 
+  const toggleVendorCheckbox = () => {
+    setIsVendor(!isVendor);
+  };
+
   const closeSignInModal = () => {
-    setIsSignInModalOpen(false); // Close the sign-in modal
+    setIsSignInModalOpen(false);
   };
 
   const openSignUpModal = () => {
-    setIsSignUpModalOpen(true); // Open the sign-up modal
+    setIsSignUpModalOpen(true);
   };
 
   const closeSignUpModal = () => {
-    setIsSignUpModalOpen(false); // Close the sign-up modal
+    setIsSignUpModalOpen(false);
   };
 
-  const handleVerifyOtp = async () => {
-    try {
-      const response = await fetch(
-        "http://localhost:5000/api/auth/verify-otp",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, otp }),
-        }
-      );
-
-      if (response.ok) {
-        // Email verified, proceed further
-      } else {
-        console.error("Invalid OTP");
-      }
-    } catch (error) {
-      console.error("Error:", error);
+  const handleProtectedLink = (e) => {
+    if (!isLoggedIn) {
+      e.preventDefault();
+      toast.error("Please sign in!");
     }
   };
 
@@ -211,8 +214,18 @@ const Navbar = () => {
       {/* Links */}
       <div className="navbar-links">
         <Link to="/">Home</Link>
-        <Link to="/ServiceWorker">Services</Link>
-        <Link to="/ComplainCreation">Complain</Link>
+        {Vendor && isLoggedIn ? (
+          <Link to="/ServiceWorker">Services</Link>
+        ) : (
+          <>
+            <Link to="/History" onClick={handleProtectedLink}>
+              History
+            </Link>
+            <Link to="/ComplainCreation" onClick={handleProtectedLink}>
+              Complain
+            </Link>
+          </>
+        )}
       </div>
 
       {/* Location and Search */}
@@ -240,40 +253,21 @@ const Navbar = () => {
         <FaRegUser style={{ fontSize: "25px" }} />
       </div>
 
-      {/* Modal
-      {isModalOpen && (
-        <div className="modal-overlay" onClick={toggleModal}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>Select Your Location</h2>
-            <input
-              type="text"
-              placeholder="Enter your location"
-              className="location-input"
-            />
-            <button className="modal-button" onClick={toggleModal}>
-              Save Location
-            </button>
-          </div>
-        </div>
-      )} */}
-
       {/* Dropdown */}
       {isDropdownOpen && isLoggedIn && (
         <div className="dropdown-menu">
-          {/* <a href="#" className="dropdown-item">
+          <a href="#" className="dropdown-item">
             Profile
           </a>
-          <a href="#" className="dropdown-item">
-            History
-          </a> */}
           <a
             href="#"
             className="dropdown-item"
             onClick={() => {
               setIsLoggedIn(false);
-              setUserName(""); // Clear the user's name
-              localStorage.removeItem("jwtToken"); // Remove JWT from local storage
+              setUserName(""); 
+              localStorage.removeItem("jwtToken"); 
               toast.info("Logged out successfully");
+              navigate("/");
             }}
           >
             Logout
@@ -347,25 +341,46 @@ const Navbar = () => {
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
+
+            <div>
+              <input
+                type="checkbox"
+                id="isVendor"
+                checked={isVendor}
+                onChange={toggleVendorCheckbox}
+              />
+              <label htmlFor="isVendor">Are you a vendor?</label>
+            </div>
+
+            {isVendor && (
+              <div>
+                <input
+                  type="number"
+                  placeholder="Years of Experience"
+                  className="sign-up-input"
+                  value={yearsOfExperience}
+                  onChange={(e) => setYearsOfExperience(e.target.value)}
+                />
+                <h4>Fields of Expertise:</h4>
+                <select
+                  className="sign-up-input select-expertise"
+                  value={fieldsOfExpertise}
+                  onChange={(e) => setFieldsOfExpertise(e.target.value)}
+                >
+                  <option value="electrician">Electrician</option>
+                  <option value="plumber">Plumber</option>
+                  <option value="carpenter">Carpenter</option>
+                  <option value="painter">Painter</option>
+                </select>
+              </div>
+            )}
+
             <button className="modal-button" onClick={handleSignUp}>
               Sign Up
             </button>
           </div>
-        </div> 
-      )}
-
-      {isOtpSent && (
-        <div>
-          <input
-            type="text"
-            placeholder="Enter OTP"
-            value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-          />
-          <button onClick={handleVerifyOtp}>Verify OTP</button>
         </div>
-      )} 
-
+      )}
     </nav>
   );
 };

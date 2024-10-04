@@ -7,6 +7,13 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+/src/constants/Login.jsx
+/src/constants/Register.jsx
+/src/constants/shopping.jpg
+/src/constants/styles.css
+
+/server/public/uploads
+
 node_modules
 dist
 dist-ssr

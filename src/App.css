@@ -1,4 +1,3 @@
-/* navbar */
 .navbar {
   display: flex;
   align-items: center;
@@ -89,7 +88,6 @@
   font-size: 18px;
 }
 
-/* modal */
 
 .location-input {
   width: 100%;
@@ -112,7 +110,6 @@
   background-color: #0056b3;
 }
 
-/* Dropdown Menu Styles */
 .dropdown-menu {
   position: absolute;
   top: 70px;
@@ -139,11 +136,10 @@
 .login-button{
   text-decoration: underline;
   position: absolute;
-  right: 10.5rem;
+  right: 13.5rem;
   top: 34px;
 }
 
-/* Sign-In Modal Specific Styles */
 .sign-in-modal h2 {
   margin-bottom: 20px;
 }
@@ -154,7 +150,7 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.7); /* Darkened overlay */
+  background-color: rgba(0, 0, 0, 0.7); 
   display: flex;
   justify-content: center;
   align-items: center;
@@ -169,7 +165,7 @@
   width: 100%;
   text-align: center;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-  animation: fadeIn 0.3s ease-in-out; /* Fade-in animation */
+  animation: fadeIn 0.3s ease-in-out; 
 }
 
 .modal-content h2 {
@@ -216,7 +212,6 @@
   background-color: #0056b3;
 }
 
-/* Fade-in animation */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -229,7 +224,6 @@
 }
 
 
-/* footer */
 .footer_container{
     padding: 145px 145px 0 145px;
     background-color: #d3d3d336;
@@ -239,4 +233,65 @@
 }
 .footer_container p{
   padding: 10px;
+}
+
+
+.complain_field_type {
+  margin-top: 20px;
+}
+
+.complain_field_type h2 {
+  font-size: 18px;
+  margin-bottom: 8px;
+}
+
+.complain_field_type select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  background-color: #fff;
+}
+
+.complain_field_type select:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+.complain_field_type select option {
+  padding: 10px;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+.complain_sendbutton {
+  margin-top: 20px;
+}
+
+.select-expertise {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+  font-size: 16px;
+  background-color: #fff;
+}
+
+.select-expertise:focus {
+  outline: none;
+  border-color: #4caf50;
+}
+
+.select-expertise option {
+  padding: 10px;
+  background-color: #f9f9f9;
+  color: #333;
+}
+
+.upcoming-work-section {
+  /* max-height: 400px;  */
+  overflow-y: auto;  
+  margin-bottom: 20px; 
 }
