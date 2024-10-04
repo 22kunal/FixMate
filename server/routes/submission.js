@@ -1,27 +1,43 @@
 const express = require("express");
+const multer = require("multer");
+const path = require("path");
 const Complaint = require("../models/Complaint");
+const User = require("../models/User");
 
 const router = express.Router();
 
-// form submission
-router.post("/complain", async (req, res) => {
-  try {
-    const { name, phone, address, description } = req.body;
-    let photo;
-    
-    if (req.file) {
-      photo = req.file.path; 
-    }
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, path.resolve('./public/uploads'));
+  },
+  filename: (req, file, cb) => {
+    const filename = `${Date.now()}-${file.originalname}`;
+    cb(null, filename);
+  },
+});
 
-    const complaintData = new Complaint({
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+}).single("photo");
+
+// form submission
+router.post("/complain",upload, async (req, res) => {
+  try {
+    const { id, name, phone, address, description, fieldType } = req.body;
+    const photo = req.file ? `/uploads/${req.file.filename}` : "";
+
+    const ComplaintData = new Complaint({
+      id,
       name,
       phone,
       address,
       description,
       photo,
+      fieldType,
     });
 
-    await complaintData.save();
+    await ComplaintData.save();
 
     res.status(200).json({ message: "Complaint submitted successfully" });
   } catch (error) {
@@ -29,14 +45,36 @@ router.post("/complain", async (req, res) => {
   }
 });
 
-// GET endpoint to fetch upcoming work data
 router.get('/upcoming-work', async (req, res) => {
+  const userId = req.query.userId; 
   try {
-      const upcomingWork = await Complaint.find(); 
+    const user = await User.findById(userId);
+    if (user.isVendor) {
+      const upcomingWork = await Complaint.find({
+        fieldType: user.fieldsOfExpertise,
+      }); 
+      return res.json(upcomingWork);
+    } 
+
+    const upcomingWork = await Complaint.find({id: userId}); 
     res.json(upcomingWork);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch upcoming work data' });
   }
 });
+
+router.put("/work-status", async (req, res) => {
+  const { workId, status } = req.body;
+
+  try {
+    const updatedWork = await Complaint.findByIdAndUpdate(workId, {
+      status: status,
+    });
+    res.status(200).json(updatedWork);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating work status" });
+  }
+});
+
 
 module.exports = router;

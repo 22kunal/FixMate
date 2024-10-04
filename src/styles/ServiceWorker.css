@@ -105,6 +105,15 @@
   cursor: pointer;
 }
 
+.btn-pending {
+  background-color: #a5a5a5;
+  color: #e8e8e8;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
 .btn-reject {
   background-color: #dc3545;
   color: #fff;
@@ -114,7 +123,7 @@
   cursor: pointer;
 }
 
-.btn-accept:hover, .btn-reject:hover {
+.btn-accept:hover, .btn-reject:hover, .btn-pending:hover {
   opacity: 0.9;
 }
 

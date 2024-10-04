@@ -1,16 +1,29 @@
-import React, { useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import '../styles/ComplainCreation.css';
 import { toast } from "react-toastify";
+import { AuthContext } from "../context/AuthContext";
 
 const ComplainForm = () => {
+  const { id } = useContext(AuthContext);
+
   const [formData, setFormData] = useState({
+    id: "",
     name: "",
     phone: "",
     address: "",
     description: "",
     photo: null,
+    fieldType: "electrician",
   });
+  const [imagePreview, setImagePreview] = useState(null);
 
+  useEffect(() => {
+    setFormData((prevData) => ({
+      ...prevData,
+      id: id
+    }))
+  }, [id])
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -18,44 +31,58 @@ const ComplainForm = () => {
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
+    setFormData((prevData) => ({
+      ...prevData,
+      photo: file,
+    }));
     if (file) {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setFormData({ ...formData, photo: reader.result });
-        console.log("File read successfully:", reader.result);
+        setImagePreview(reader.result); 
       };
+      reader.readAsDataURL(file); 
     }
-    console.log(file);
   };
 
   const handleSubmit = async(e) => {
     e.preventDefault();
+      const form = new FormData();
+      form.append("photo", formData.photo);
+      form.append("id", formData.id);
+      form.append("name", formData.name);
+      form.append("phone", formData.phone);
+      form.append("address", formData.address);
+      form.append("description", formData.description);
+      form.append("fieldType", formData.fieldType);
     
     try {
-    const response = await fetch("http://localhost:5000/api/complain", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(formData),
-    });
-    console.log(response);
-    if (response.ok) {
-      console.log("Complain submitted successfully");
-      setFormData({
-        name: "",
-        phone: "",
-        address: "",
-        description: "",
-        photo: null,
+      const response = await fetch("http://localhost:5000/api/complain", {
+        method: "POST",
+        // headers: { "Content-Type": "multipart/form-data" },
+        body: form,
       });
-      toast.success("Complain submitted successfully");
-    } else {
-      console.error("Failed to submit complain");
+      if (response.ok) {
+        console.log(form);
+        console.log("Complain submitted successfully");
+        setFormData({
+          id: id,
+          name: "",
+          phone: "",
+          address: "",
+          description: "",
+          photo: null,
+          fieldType: "electrician",
+        });
+        setImagePreview(null);
+        toast.success("Complain submitted successfully");
+      } else {
+        toast.error("Failed to submit complain");
+      }
+    } catch (error) {
+      console.error("Error submitting complain:", error);
     }
-  } catch (error) {
-    console.error("Error submitting complain:", error);
-  }
-
   };
+
 
   return (
     <div>
@@ -66,6 +93,7 @@ const ComplainForm = () => {
               <h2>Photo</h2>
               <input
                 type="file"
+                name="photo"
                 accept="image/*"
                 id="photoInput"
                 onChange={handleFileChange}
@@ -121,6 +149,20 @@ const ComplainForm = () => {
               ></textarea>
             </div>
 
+            <div className="complain_field_type">
+              <h2>Field Type:</h2>
+              <select
+                name="fieldType"
+                value={formData.fieldType}
+                onChange={handleInputChange}
+              >
+                <option value="electrician">Electrician</option>
+                <option value="plumber">Plumber</option>
+                <option value="carpenter">Carpenter</option>
+                <option value="painter">Painter</option>
+              </select>
+            </div>
+
             <div className="complain_sendbutton">
               <button type="submit">Send</button>
             </div>
@@ -129,7 +171,11 @@ const ComplainForm = () => {
 
         <div className="complain_content">
           <div className="complain_rightup">
-            <div className="complain_pic"></div>
+            <div className="complain_pic">
+              {imagePreview && (
+                <img src={imagePreview} alt="Selected preview" />
+              )}
+            </div>
           </div>
 
           <div className="complain_rightdown">

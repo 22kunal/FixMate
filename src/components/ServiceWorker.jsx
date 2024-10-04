@@ -1,17 +1,17 @@
-import React,{useState,useEffect} from 'react'
+import React, { useState, useEffect, useContext } from "react";
 import '/src/styles/ServiceWorker.css';
-import electrician from '/src/assets/homePage/electrician.jpg'
-
+import { AuthContext } from '../context/AuthContext';
+import user from '/user.avif';
 
 function ServiceWorker() {
 
-  const [workerDetails, setWorkerDetails] = useState({});
   const [upcomingWork, setUpcomingWork] = useState([]);
+  const { name,id } = useContext(AuthContext);
 
   useEffect(() => {
-    // Fetch upcoming work
     const fetchData = async () => {
-      const response = await fetch("http://localhost:5000/api/upcoming-work", {
+      if (!id) return; 
+      const response = await fetch(`http://localhost:5000/api/upcoming-work?userId=${id}`, {
         method: "GET",
         headers: { "Content-Type": "application/json" },
       });
@@ -27,32 +27,63 @@ function ServiceWorker() {
     fetchData();
   }, []);
 
+  const handleStatusChange = async (workId, newStatus) => {
+     
+     try {
+       const response = await fetch(`http://localhost:5000/api/work-status`, {
+         method: "PUT",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({ workId, status: newStatus }),
+       });
+
+       if (response.ok) {
+         setUpcomingWork((prevWork) =>
+           prevWork.map((work) =>
+             work._id === workId ? { ...work, status: newStatus } : work
+           )
+         );
+       } else {
+         console.error("Failed to update status");
+       }
+     } catch (error) {
+       console.error("Error updating status:", error);
+     }
+  };
+  
+  const acceptedCount = upcomingWork.filter(
+    (work) => work.status === "accepted"
+  ).length;
+  const rejectedCount = upcomingWork.filter(
+    (work) => work.status === "rejected"
+  ).length;
+
+
   return (
     <div className="page-container">
       <div className="worker-details-section">
         <div className="worker-info">
           <div className="worker-image">
-            <img src={electrician} alt="Worker" />
+            <img src={user} alt="Worker" />
           </div>
           <div className="worker-name">
             <h1>
-              <strong>Manoj</strong>
+              <strong>{name}</strong>
             </h1>
           </div>
           <div className="worker-stats">
             <div className="stat-item">
               <h2>
-                Pending: <span>0</span>
+                Total: <span>{upcomingWork.length}</span>
               </h2>
             </div>
             <div className="stat-item">
               <h2>
-                Completed: <span>0</span>
+                Accepted: <span>{acceptedCount}</span>
               </h2>
             </div>
             <div className="stat-item">
               <h2>
-                Canceled: <span>0</span>
+                Rejected: <span>{rejectedCount}</span>
               </h2>
             </div>
           </div>
@@ -60,11 +91,11 @@ function ServiceWorker() {
       </div>
 
       <div className="upcoming-work-section">
-        {upcomingWork.length>0 ? (
+        {upcomingWork.length > 0 ? (
           upcomingWork.map((work, index) => (
             <div className="work-item" key={index}>
               <div className="work-image">
-                <img src={electrician} alt="Work" />
+                <img src={`../../server/public${work.photo}`} alt="Work" />
               </div>
               <div className="work-details">
                 <div className="work-header">
@@ -76,10 +107,34 @@ function ServiceWorker() {
                   <p>{work.description}</p>
                 </div>
                 <div className="work-category">
-                  <h5>{work.category||"electrician"}</h5>
+                  <h5>{work.fieldType}</h5>
                   <div className="work-actions">
-                    <button className="btn-accept">Accept</button>
-                    <button className="btn-reject">Reject</button>
+                    {work.status === "pending" && (
+                      <>
+                        <button
+                          className="btn-accept"
+                          onClick={() =>
+                            handleStatusChange(work._id, "accepted")
+                          }
+                        >
+                          Accept
+                        </button>
+                        <button
+                          className="btn-reject"
+                          onClick={() =>
+                            handleStatusChange(work._id, "rejected")
+                          }
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    {work.status === "rejected" && (
+                      <button className="btn-reject">Rejected</button>
+                    )}
+                    {work.status === "accepted" && (
+                      <button className="btn-accept">Accepted</button>
+                    )}
                   </div>
                 </div>
               </div>
