@@ -1,11 +1,13 @@
 import React, { useState, useEffect,useContext } from "react";
 import "/src/styles/ServiceWorker.css";
+import { useNavigate } from "react-router-dom";
 import user from "/user.avif";
 import { AuthContext } from "../context/AuthContext";
 
 function History() {
-    const [upcomingWork, setUpcomingWork] = useState([]);
-    const { name, id } = useContext(AuthContext);
+  const [upcomingWork, setUpcomingWork] = useState([]);
+  const { name, id } = useContext(AuthContext);
+  const navigate = useNavigate();
 
     useEffect(() => {
       const fetchData = async () => {
@@ -33,7 +35,6 @@ function History() {
 
       fetchData();
     }, [id]);
-  
 
    const acceptedCount = upcomingWork.filter(
      (work) => work.status === "accepted"
@@ -41,6 +42,7 @@ function History() {
    const rejectedCount = upcomingWork.filter(
      (work) => work.status === "rejected"
    ).length;
+  console.log(upcomingWork);
 
   return (
     <div className="page-container">
@@ -101,6 +103,18 @@ function History() {
                     )}
                     {work.status === "accepted" && (
                       <button className="btn-accept">Accepted</button>
+                    )}
+                    {work.status === "reviewed" && (
+                      <button
+                        className="btn-accept bg-yellow-500"
+                        onClick={() =>
+                          navigate("/BillDetails", {
+                            state: { workDetails: work },
+                          })
+                        }
+                      >
+                        Preview
+                      </button>
                     )}
                   </div>
                 </div>

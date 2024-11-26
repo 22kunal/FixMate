@@ -55,16 +55,20 @@ router.post("/signin", async (req, res) => {
         id: user._id,
         name: user.name,
         isVendor: user.isVendor, 
+        fieldsOfExpertise: user.isVendor ? user.fieldsOfExpertise : "",
+        isAdmin: user.isAdmin? user.isAdmin : false,
       },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
-
+    
     return res.status(200).json({
       token,
       name: user.name,
-      isVendor: user.isVendor, 
-      id: user._id, 
+      isVendor: user.isVendor,
+      id: user._id,
+      fieldsOfExpertise: user.isVendor ? user.fieldsOfExpertise : "",
+      isAdmin: user.isAdmin? user.isAdmin : false,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -86,7 +90,14 @@ const authenticateToken = (req, res, next) => {
 
 // Token validation route
 router.post('/validate', authenticateToken, (req, res) => {
-  res.json({ name: req.user.name,id:req.user.id,isVendor:req.user.isVendor }); 
+  res.json(
+    { name: req.user.name,
+      id: req.user.id,
+      isVendor: req.user.isVendor,
+      fieldsOfExpertise: req.user.fieldsOfExpertise,
+      isAdmin: req.user.isAdmin,
+    }
+  ); 
 });
 
 

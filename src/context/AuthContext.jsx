@@ -9,6 +9,8 @@ const AuthProvider = ({ children }) => {
     name: "",
     id: null,
     isVendor: false,
+    fieldsOfExpertise: "",
+    isAdmin: false,
   });
 
   useEffect(() => {
@@ -29,7 +31,8 @@ const AuthProvider = ({ children }) => {
           }
         })
         .then((data) => {
-          handleLogin(token, data.name, data.id, data.isVendor);
+          handleLogin(
+            token, data.name, data.id, data.isVendor, data.fieldsOfExpertise, data.isAdmin);
         })
         .catch(() => {
           localStorage.removeItem("jwtToken");
@@ -38,18 +41,22 @@ const AuthProvider = ({ children }) => {
             name: "",
             id: null,
             isVendor: false,
+            fieldsOfExpertise: "",
+            isAdmin: false,
           });
         });
     }
   }, []);
 
-  const handleLogin = (token, name, id, isVendor) => {
+  const handleLogin = (token, name, id, isVendor,fieldsOfExpertise,isAdmin) => {
     localStorage.setItem("jwtToken", token);
     setAuthData({
       token,
       name,
       id,
       isVendor,
+      fieldsOfExpertise,
+      isAdmin,
     });
     toast.success("Logged in successfully");
   };

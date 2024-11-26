@@ -6,7 +6,7 @@ import user from '/user.avif';
 
 function ServiceWorker() {
   const [upcomingWork, setUpcomingWork] = useState([]);
-  const { name, id } = useContext(AuthContext);
+  const { name, id, fieldsOfExpertise } = useContext(AuthContext);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -31,6 +31,33 @@ function ServiceWorker() {
     };
     fetchData();
   }, [id]);
+
+  const handleStatusChange = async (workId, newStatus) => {
+     
+     try {
+       const response = await fetch(`http://localhost:5000/api/work-status`, {
+         method: "PUT",
+         headers: { "Content-Type": "application/json" },
+         body: JSON.stringify({
+           workId, 
+           status: newStatus, 
+           vendorName: name, 
+           serviceType: fieldsOfExpertise,
+         }),
+       });
+       if (response.ok) {
+         setUpcomingWork((prevWork) =>
+           prevWork.map((work) =>
+             work._id === workId ? { ...work, status: newStatus } : work
+           )
+         );
+       } else {
+         console.error("Failed to update status");
+       }
+     } catch (error) {
+       console.error("Error updating status:", error);
+     }
+  };
 
   const acceptedCount = upcomingWork.filter(work => work.status === "accepted").length;
   const rejectedCount = upcomingWork.filter(work => work.status === "rejected").length;
@@ -90,14 +117,19 @@ function ServiceWorker() {
                       <>
                         <button
                           className="btn-accept"
-                          onClick={() => navigate("/BillDetails", { state: { workDetails: work } })}
+                          onClick={() =>
+                            navigate("/BillDetails", {
+                              state: { workDetails: work },
+                            })
+                          }
                         >
                           Accept
                         </button>
                         <button
                           className="btn-reject"
-                          // Uncomment and implement rejection functionality if needed
-                          // onClick={() => handleStatusChange(work._id, "rejected")}
+                          onClick={() =>
+                            handleStatusChange(work._id, "rejected")
+                          }
                         >
                           Reject
                         </button>
@@ -108,6 +140,23 @@ function ServiceWorker() {
                     )}
                     {work.status === "accepted" && (
                       <button className="btn-accept">Accepted</button>
+                    )}
+                    {work.status === "reviewed" && (
+                      <>
+                        <button
+                          className="btn-accept bg-pink-500"
+                          onClick={() =>
+                            navigate("/BillDetails", {
+                              state: { workDetails: work },
+                            })
+                          }
+                        >
+                          Preview
+                        </button>
+                        <button className="btn-accept bg-yellow-500">
+                          Sent
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
