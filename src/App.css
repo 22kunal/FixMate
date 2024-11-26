@@ -136,7 +136,7 @@
 .login-button{
   text-decoration: underline;
   position: absolute;
-  right: 13.5rem;
+  right: 10.5rem;
   top: 34px;
 }
 
@@ -295,3 +295,29 @@
   overflow-y: auto;  
   margin-bottom: 20px; 
 }
+
+.check_vendor{
+  height: 30px;
+}
+
+.check_vendor label{
+  text-align: center;
+  position: relative;
+  top: 3px;
+  font-size:larger;
+}
+
+.check_vendor input{
+  text-align: center;
+  position: relative;
+  top: 3px;
+}
+
+input[type="checkbox"] {
+  width: 15px;
+  height: 15px;
+  transform: scale(1.5); /* Adjust the scale as needed */
+  margin-right: 10px; /* Optional: Adjust spacing */
+}
+
+

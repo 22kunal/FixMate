@@ -342,18 +342,18 @@ const Navbar = () => {
               onChange={(e) => setConfirmPassword(e.target.value)}
             />
 
-            <div>
+            <div className="check_vendor">
               <input
                 type="checkbox"
                 id="isVendor"
                 checked={isVendor}
                 onChange={toggleVendorCheckbox}
               />
-              <label htmlFor="isVendor">Are you a vendor?</label>
+              <label htmlFor="isVendor">Are you a Service Provider?</label>
             </div>
 
             {isVendor && (
-              <div>
+              <div >
                 <input
                   type="number"
                   placeholder="Years of Experience"

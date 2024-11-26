@@ -1,63 +1,39 @@
 import React, { useState, useEffect, useContext } from "react";
+import { useNavigate } from "react-router-dom"; 
 import '/src/styles/ServiceWorker.css';
 import { AuthContext } from '../context/AuthContext';
 import user from '/user.avif';
 
 function ServiceWorker() {
-
   const [upcomingWork, setUpcomingWork] = useState([]);
-  const { name,id } = useContext(AuthContext);
+  const { name, id } = useContext(AuthContext);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       if (!id) return; 
-      const response = await fetch(`http://localhost:5000/api/upcoming-work?userId=${id}`, {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      });
+      try {
+        const response = await fetch(`http://localhost:5000/api/upcoming-work?userId=${id}`, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        });
 
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Fetched data:', data);
-        setUpcomingWork(data);
-        console.log("fetched successfully");
-      } else {
-        console.error("Failed to fetch data");
+        if (response.ok) {
+          const data = await response.json();
+          console.log('Fetched data:', data);
+          setUpcomingWork(data);
+        } else {
+          console.error("Failed to fetch data");
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
       }
-    }
+    };
     fetchData();
-  }, []);
+  }, [id]);
 
-  const handleStatusChange = async (workId, newStatus) => {
-     
-     try {
-       const response = await fetch(`http://localhost:5000/api/work-status`, {
-         method: "PUT",
-         headers: { "Content-Type": "application/json" },
-         body: JSON.stringify({ workId, status: newStatus }),
-       });
-
-       if (response.ok) {
-         setUpcomingWork((prevWork) =>
-           prevWork.map((work) =>
-             work._id === workId ? { ...work, status: newStatus } : work
-           )
-         );
-       } else {
-         console.error("Failed to update status");
-       }
-     } catch (error) {
-       console.error("Error updating status:", error);
-     }
-  };
-  
-  const acceptedCount = upcomingWork.filter(
-    (work) => work.status === "accepted"
-  ).length;
-  const rejectedCount = upcomingWork.filter(
-    (work) => work.status === "rejected"
-  ).length;
-
+  const acceptedCount = upcomingWork.filter(work => work.status === "accepted").length;
+  const rejectedCount = upcomingWork.filter(work => work.status === "rejected").length;
 
   return (
     <div className="page-container">
@@ -93,8 +69,8 @@ function ServiceWorker() {
 
       <div className="upcoming-work-section">
         {upcomingWork.length > 0 ? (
-          upcomingWork.map((work, index) => (
-            <div className="work-item" key={index}>
+          upcomingWork.map((work) => (
+            <div className="work-item" key={work._id}>
               <div className="work-image">
                 <img src={`../../server/public${work.photo}`} alt="Work" />
               </div>
@@ -114,17 +90,14 @@ function ServiceWorker() {
                       <>
                         <button
                           className="btn-accept"
-                          onClick={() =>
-                            handleStatusChange(work._id, "accepted")
-                          }
+                          onClick={() => navigate("/BillDetails", { state: { workDetails: work } })}
                         >
                           Accept
                         </button>
                         <button
                           className="btn-reject"
-                          onClick={() =>
-                            handleStatusChange(work._id, "rejected")
-                          }
+                          // Uncomment and implement rejection functionality if needed
+                          // onClick={() => handleStatusChange(work._id, "rejected")}
                         >
                           Reject
                         </button>
@@ -149,4 +122,4 @@ function ServiceWorker() {
   );
 }
 
-export default ServiceWorker
+export default ServiceWorker;

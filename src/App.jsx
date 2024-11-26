@@ -9,7 +9,7 @@ import { BrowserRouter as Router,Route,Routes } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import History from './components/History';
-
+import BillDetails from './components/BillDetails';
 function App(){
   return (
     <>
@@ -29,6 +29,7 @@ function App(){
           <Route path="/ServiceWorker" element={<ServiceWorker />} />
           <Route path="/History" element={<History />} />
           <Route path="/ComplainCreation" element={<ComplainCreation />} />
+          <Route path="/BillDetails" element={<BillDetails/>}/>
         </Routes>
         <Footer />
       </Router>
