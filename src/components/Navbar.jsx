@@ -1,7 +1,7 @@
 import { FaRegUser } from "react-icons/fa";
 import { CiSearch } from "react-icons/ci";
 import { useState,useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useContext } from "react";
@@ -24,12 +24,19 @@ const Navbar = () => {
   const [location, setLocation] = useState("Select Location");
   const [error, setError] = useState(null);
 
-  const [isVendor, setIsVendor] = useState(false);
   const [yearsOfExperience, setYearsOfExperience] = useState("");
   const [fieldsOfExpertise, setFieldsOfExpertise] = useState("electrician");
 
   const { handleLogin, handleLogout } = useContext(AuthContext);
   const [Vendor, setVendor] = useState(false); 
+  const [isVen, setIsVen] = useState(false); 
+  const path = useLocation();
+  const [active, setActive] = useState(path.pathname);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    setActive(path.pathname);
+  }, [path.pathname]);
 
   const navigate = useNavigate();
 
@@ -87,7 +94,7 @@ const Navbar = () => {
         .then((data) => {
           setIsLoggedIn(true);
           setUserName(data.name);
-          setVendor(data.vendor);
+          setVendor(data.isVendor);
           // handleLogin(token, data.name, data.id, data.isVendor);
         })
         .catch(() => {
@@ -125,14 +132,15 @@ const Navbar = () => {
         body: JSON.stringify({ email, password }),
       });
       if (response.ok) {
-        const { token, name, isVendor, id } = await response.json();
+        const { token, name, isVendor, id, fieldsOfExpertise,isAdmin:admin } = await response.json();
         localStorage.setItem("jwtToken", token);
-        handleLogin(token, name, id,isVendor);
+        handleLogin(token, name, id,isVendor,fieldsOfExpertise);
         setVendor(isVendor); 
         setUserName(name);
         setIsLoggedIn(true);
         setIsSignInModalOpen(false);
         setIsDropdownOpen(false);
+        setIsAdmin(admin);
       } else {
         const error = await response.json();
         toast.error(error.error);
@@ -154,7 +162,7 @@ const Navbar = () => {
       return;
     }
 
-    const vendorData = isVendor ? { yearsOfExperience, fieldsOfExpertise } : {};
+    const vendorData = isVen ? { yearsOfExperience, fieldsOfExpertise } : {};
 
     try {
       const response = await fetch("http://localhost:5000/api/auth/signup", {
@@ -164,7 +172,7 @@ const Navbar = () => {
           name: fullName,
           email,
           password,
-          isVendor,
+          isVendor:isVen,
           ...vendorData,
         }),
       });
@@ -181,7 +189,7 @@ const Navbar = () => {
   };
 
   const toggleVendorCheckbox = () => {
-    setIsVendor(!isVendor);
+    setIsVen(!isVen);
   };
 
   const closeSignInModal = () => {
@@ -202,7 +210,8 @@ const Navbar = () => {
       toast.error("Please sign in!");
     }
   };
-
+  console.log(isAdmin);
+  
   return (
     <nav className="navbar">
       {/* Logo */}
@@ -213,18 +222,62 @@ const Navbar = () => {
 
       {/* Links */}
       <div className="navbar-links">
-        <Link to="/">Home</Link>
+        <Link
+          to="/"
+          className={`${
+            active == "/" ? "text-black" : "text-gray-600 hover:text-gray-800"
+          }`}
+        >
+          Home
+        </Link>
         {Vendor && isLoggedIn ? (
-          <Link to="/ServiceWorker">Services</Link>
+          <Link
+            to="/ServiceWorker"
+            className={`${
+              active == "/ServiceWorker"
+                ? "text-black"
+                : "text-gray-600 hover:text-gray-800"
+            }`}
+          >
+            Services
+          </Link>
         ) : (
           <>
-            <Link to="/History" onClick={handleProtectedLink}>
+            <Link
+              to="/History"
+              className={`${
+                active == "/History"
+                  ? "text-black"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+              onClick={handleProtectedLink}
+            >
               History
             </Link>
-            <Link to="/ComplainCreation" onClick={handleProtectedLink}>
+            <Link
+              to="/ComplainCreation"
+              className={`${
+                active == "/ComplainCreation"
+                  ? "text-black"
+                  : "text-gray-600 hover:text-gray-800"
+              }`}
+              onClick={handleProtectedLink}
+            >
               Complain
             </Link>
           </>
+        )}
+        {isAdmin && isLoggedIn && (
+          <Link
+            to="/admin"
+            className={`${
+              active == "/admin"
+                ? "text-black"
+                : "text-gray-600 hover:text-gray-800"
+            }`}
+          >
+            Dashboard
+          </Link>
         )}
       </div>
 
@@ -264,8 +317,8 @@ const Navbar = () => {
             className="dropdown-item"
             onClick={() => {
               setIsLoggedIn(false);
-              setUserName(""); 
-              localStorage.removeItem("jwtToken"); 
+              setUserName("");
+              localStorage.removeItem("jwtToken");
               toast.info("Logged out successfully");
               navigate("/");
             }}
@@ -311,7 +364,7 @@ const Navbar = () => {
           <div
             className="modal-content sign-up-modal"
             onClick={(e) => e.stopPropagation()}
-          > 
+          >
             <h2>Sign Up</h2>
             <input
               type="text"
@@ -346,14 +399,14 @@ const Navbar = () => {
               <input
                 type="checkbox"
                 id="isVendor"
-                checked={isVendor}
+                checked={isVen}
                 onChange={toggleVendorCheckbox}
               />
               <label htmlFor="isVendor">Are you a Service Provider?</label>
             </div>
 
-            {isVendor && (
-              <div >
+            {isVen && (
+              <div>
                 <input
                   type="number"
                   placeholder="Years of Experience"

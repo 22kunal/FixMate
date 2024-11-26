@@ -1,38 +1,108 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from "react";
 import { useLocation, useNavigate } from 'react-router-dom';
+import { AuthContext } from "../context/AuthContext";
+import { toast } from "react-toastify";
 
 const BillDetails = () => {
-
+  const { name,isVendor, fieldsOfExpertise } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
-  const { workDetails } = location.state || {}; 
+  const { workDetails } = location.state || {};
+  const [serviceCharges, setServiceCharges] = useState(workDetails.serviceCharges || 0);
+  const [isLoading, setIsLoading] = useState(false);
+  const taxRate = 0.12;
+  const taxAmount = serviceCharges * taxRate;
+  const totalAmount = serviceCharges + taxAmount;
 
-  // State for negotiate modal
   const [showNegotiateBox, setShowNegotiateBox] = useState(false);
   const [negotiatedPrice, setNegotiatedPrice] = useState("");
+  const handleNegotiateClick = () => {
+    setShowNegotiateBox(true);
+  };
+  const isCustomer = !isVendor;
+
+  const handleSendNegotiation = () => {
+    console.log("Negotiated Price:", negotiatedPrice);
+    setShowNegotiateBox(false);
+  };
 
   if (!workDetails) {
     return <p>No work details available.</p>;
   }
-  const { vendorName, serviceDate, serviceDetails, serviceCharges, tax, totalAmount } = workDetails;
-  const handleProceed = () => {
-    // Add any validation or data processing here
-    navigate('/payment-summary'); // Replace with your actual route
-  };
 
   const handleGoBack = () => {
     navigate(-1);
   };
 
-  const handleNegotiateClick = () => {
-    setShowNegotiateBox(true);
+  const handleProceed = async () => {
+    if (!serviceCharges || serviceCharges <= 0) {
+      toast.error("Please enter a valid service charge.");
+      return;
+    }
+    setIsLoading(true);
+    const billData = {
+      serviceCharges,
+      taxAmount,
+      totalAmount,
+      taxRate,
+      serviceType: fieldsOfExpertise,
+      serviceDescription: workDetails.description,
+      vendorName: name,
+      customerName: workDetails.name,
+      customerPhone: workDetails.phone,
+    };
+
+    try {
+      const response = await fetch("http://localhost:5000/api/bill/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(billData),
+      });
+
+      const data = await response.json();
+      toast.success(data.message);
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("Failed to create the bill. Please try again.");
+    } finally {
+      setIsLoading(false);
+      handleStatusChange(workDetails._id, "reviewed");
+      handleGoBack();
+    }
   };
 
-  const handleSendNegotiation = () => {
-    console.log("Negotiated Price:", negotiatedPrice);
-    setShowNegotiateBox(false);
-    // Add further processing for the negotiated price here
+  const handleStatusChange = async (workId, newStatus) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/work-status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          workId, 
+          status: newStatus,
+          vendorName: name,
+          serviceType: fieldsOfExpertise,
+          serviceCharges,
+          taxAmount,
+          totalAmount,
+          taxRate,
+        }),
+      });
+      if (response.ok) {
+        setUpcomingWork((prevWork) =>
+          prevWork.map((work) =>
+            work._id === workId ? { ...work, status: newStatus } : work
+          )
+        );
+      } else {
+        console.error("Failed to update status");
+      }
+    } catch (error) {
+      console.error("Error updating status:", error);
+    }
   };
+  console.log(workDetails)
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -43,31 +113,54 @@ const BillDetails = () => {
         </div>
 
         <div className="p-6 space-y-6">
+          {/* Customer Details Section */}
+          <div className="space-y-2">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Customer Details
+            </h3>
+            <div className="grid grid-cols-2 gap-4 p-4 bg-gray-100 rounded-lg">
+              <div>
+                <p className="text-sm text-gray-600">Customer Name</p>
+                <p className="font-medium">{workDetails.name}</p>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600">Customer Phone</p>
+                <p className="font-medium">{workDetails.phone}</p>
+              </div>
+            </div>
+          </div>
+
           {/* Vendor Details Section */}
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">Vendor Details</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Vendor Details
+            </h3>
             <div className="grid grid-cols-2 gap-4 p-4 bg-gray-100 rounded-lg">
               <div>
                 <p className="text-sm text-gray-600">Vendor Name</p>
-                <p className="font-medium">{workDetails.vendorName}</p>
+                <p className="font-medium">{isCustomer? workDetails.vendorName : name}</p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Domain</p>
-                <p className="font-medium">{workDetails.domain}</p>
+                <p className="font-medium">
+                  {isVendor ? fieldsOfExpertise : workDetails.serviceType}
+                </p>
               </div>
             </div>
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-gray-800">Service Details</h3>
+            <h3 className="text-lg font-semibold text-gray-800">
+              Service Details
+            </h3>
             <div className="p-4 bg-gray-100 rounded-lg space-y-2">
               <div className="flex justify-between">
                 <p className="text-sm text-gray-600">Service Date</p>
-                <p className="font-medium">{workDetails.serviceDate}</p>
+                <p className="font-medium">{new Date().toLocaleDateString()}</p>
               </div>
               <div className="flex justify-between">
                 <p className="text-sm text-gray-600">Service Description</p>
-                <p className="font-medium">{workDetails.serviceDetails}</p>
+                <p className="font-medium">{workDetails.description}</p>
               </div>
             </div>
           </div>
@@ -77,16 +170,44 @@ const BillDetails = () => {
             <h3 className="text-lg font-semibold text-gray-800">Charges</h3>
             <div className="p-4 bg-gray-100 rounded-lg space-y-2">
               <div className="flex justify-between">
-                <p className="text-sm text-gray-600">Service Charges</p>
-                <p className="font-medium">₹{workDetails.serviceCharges}</p>
+                {isVendor ? (
+                  <>
+                    <label
+                      htmlFor="serviceCharges"
+                      className="text-sm text-gray-600"
+                    >
+                      Service Charges
+                    </label>
+                    <input
+                      type="number"
+                      id="serviceCharges"
+                      value={serviceCharges}
+                      onChange={(e) =>
+                        setServiceCharges(Number(e.target.value))
+                      }
+                      className="w-24 px-2 py-1 border rounded-md text-right appearance-none focus:outline-none"
+                      style={{
+                        MozAppearance: "textfield",
+                      }}
+                    />
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm text-gray-600">Service Charges</p>
+                    <p className="font-medium">
+                      ₹{workDetails.serviceCharges.toFixed(2)}
+                    </p>
+                  </>
+                )}
               </div>
               <div className="flex justify-between">
-                <p className="text-sm text-gray-600">Tax (18%)</p>
-                <p className="font-medium">₹{workDetails.tax}</p>
+                <p className="text-sm text-gray-600">Tax (12%)</p>
+                <p className="font-medium">₹{isVendor? taxAmount.toFixed(2): workDetails.taxAmount.toFixed(2)}</p>
               </div>
+              <p className="text-xs">Mode of Payment : Online</p>
               <div className="flex justify-between border-t pt-2">
-                <p className="font-semibold">Total Amount</p>
-                <p className="font-bold text-lg">₹{workDetails.totalAmount}</p>
+                <p className="font-semibold">Total Amount (including tax)</p>
+                <p className="font-bold text-lg">₹{isVendor? totalAmount.toFixed(2): workDetails.totalAmount.toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -100,23 +221,26 @@ const BillDetails = () => {
           >
             Go Back
           </button>
-          <button
-            onClick={handleNegotiateClick}
-            className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
-          >
-            Negotiate
-          </button>
+          {isCustomer && (
+            <button
+              onClick={handleNegotiateClick}
+              className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+            >
+              Negotiate
+            </button>
+          )}
           <button
             onClick={handleProceed}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            disabled={isLoading}
           >
-            Proceed
+            {isCustomer ? "Pay now" : isLoading ? "Creating Bill..." : "Send"}
           </button>
         </div>
       </div>
 
       {/* Negotiate Modal */}
-      {showNegotiateBox && (
+      {isCustomer && showNegotiateBox && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
           <div className="bg-white p-6 rounded-lg shadow-lg space-y-4 w-80">
             <h2 className="text-lg font-semibold">Enter Your Price</h2>

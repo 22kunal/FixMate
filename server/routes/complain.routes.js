@@ -64,11 +64,36 @@ router.get('/upcoming-work', async (req, res) => {
 });
 
 router.put("/work-status", async (req, res) => {
-  const { workId, status } = req.body;
+  const {
+    workId,
+    status,
+    vendorName,
+    serviceType,
+    serviceCharges,
+    taxAmount,
+    totalAmount,
+    taxRate,
+  } = req.body;
 
   try {
+
+    if (!serviceCharges && !taxAmount && !totalAmount && !taxRate) {
+      const updatedWork = await Complaint.findByIdAndUpdate(workId, {
+        status,
+        vendorName,
+        serviceType,
+      });
+      res.status(200).json(updatedWork);
+    }
+
     const updatedWork = await Complaint.findByIdAndUpdate(workId, {
-      status: status,
+      status,
+      vendorName,
+      serviceType,
+      serviceCharges,
+      taxAmount,
+      totalAmount,
+      taxRate,
     });
     res.status(200).json(updatedWork);
   } catch (error) {
