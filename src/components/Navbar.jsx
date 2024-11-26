@@ -1,12 +1,10 @@
 import { FaRegUser } from "react-icons/fa";
-import { CiSearch } from "react-icons/ci";
 import { useState,useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -95,6 +93,7 @@ const Navbar = () => {
           setIsLoggedIn(true);
           setUserName(data.name);
           setVendor(data.isVendor);
+          setIsAdmin(data.isAdmin);
           // handleLogin(token, data.name, data.id, data.isVendor);
         })
         .catch(() => {
@@ -132,7 +131,7 @@ const Navbar = () => {
         body: JSON.stringify({ email, password }),
       });
       if (response.ok) {
-        const { token, name, isVendor, id, fieldsOfExpertise,isAdmin:admin } = await response.json();
+        const { token, name, isVendor, id, fieldsOfExpertise, isAdmin: admin } = await response.json();
         localStorage.setItem("jwtToken", token);
         handleLogin(token, name, id,isVendor,fieldsOfExpertise);
         setVendor(isVendor); 
@@ -210,7 +209,7 @@ const Navbar = () => {
       toast.error("Please sign in!");
     }
   };
-  console.log(isAdmin);
+
   
   return (
     <nav className="navbar">
@@ -230,7 +229,7 @@ const Navbar = () => {
         >
           Home
         </Link>
-        {Vendor && isLoggedIn ? (
+        {!isAdmin && (Vendor && isLoggedIn ? (
           <Link
             to="/ServiceWorker"
             className={`${
@@ -266,7 +265,7 @@ const Navbar = () => {
               Complain
             </Link>
           </>
-        )}
+        ))}
         {isAdmin && isLoggedIn && (
           <Link
             to="/admin"

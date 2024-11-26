@@ -63,5 +63,13 @@ router.post("/create", async (req, res) => {
   }
 });
 
+router.get("/all", async (req, res) => {
+  try {
+    const bills = await Bill.find();
+    res.status(200).json(bills);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch bills" });
+  }
+});
 
 module.exports = router;
