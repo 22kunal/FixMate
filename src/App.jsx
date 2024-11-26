@@ -25,7 +25,6 @@ function App(){
               </>
             }
           />
-
           <Route path="/ServiceWorker" element={<ServiceWorker />} />
           <Route path="/History" element={<History />} />
           <Route path="/ComplainCreation" element={<ComplainCreation />} />
