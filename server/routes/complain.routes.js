@@ -101,7 +101,7 @@ router.put("/work-status", async (req, res) => {
   }
 });
 
-router.get("/all", async (req, res) => {
+router.get("/complain/all", async (req, res) => {
   try {
     const complaints = await Complaint.find();
     res.status(200).json(complaints);
