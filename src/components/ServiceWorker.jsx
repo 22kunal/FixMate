@@ -138,7 +138,7 @@ function ServiceWorker() {
                     {work.status === "rejected" && (
                       <button className="btn-reject">Rejected</button>
                     )}
-                    {work.status === "accepted" && (
+                    {work.status === "accepted" || work.status === "paid" && (
                       <button className="btn-accept">Accepted</button>
                     )}
                     {work.status === "reviewed" && (

@@ -101,8 +101,11 @@ function History() {
                     {work.status === "rejected" && (
                       <button className="btn-reject">Rejected</button>
                     )}
-                    {work.status === "accepted" && (
+                    {work.status === ("accepted") && (
                       <button className="btn-accept">Accepted</button>
+                    )}
+                    {work.status === "paid" && (
+                      <button className="btn-accept">Paid</button>
                     )}
                     {work.status === "reviewed" && (
                       <button
