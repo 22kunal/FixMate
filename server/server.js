@@ -24,6 +24,6 @@ app.use(express.json());
 
 // Routes
 app.use("/api/auth", authRoutes);
-app.use("/api", formSubmission);
+app.use("/api/complain", formSubmission);
 app.use("/api/bill", billRoutes);
 
