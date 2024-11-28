@@ -2,6 +2,11 @@ const mongoose = require("mongoose");
 
 const billSchema = new mongoose.Schema(
   {
+    complaintId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Complaint",
+      required: true,
+    },
     vendorName: {
       type: String,
       required: true,

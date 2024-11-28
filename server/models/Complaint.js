@@ -1,25 +1,29 @@
 const mongoose = require("mongoose");
 
 const ComplainSchema = new mongoose.Schema({
-  id: { 
+  id: {
     type: String,
-    required: true 
+    required: true
   },
-  name: { 
-    type: String,
-    required: true 
+  BillId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Bill",
   },
-  phone: { 
+  name: {
     type: String,
-    required: true 
+    required: true
   },
-  address: { 
+  phone: {
     type: String,
-    required: true 
+    required: true
   },
-  description: { 
+  address: {
     type: String,
-    required: true 
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
   },
   serviceCharges: {
     type: Number,
@@ -39,19 +43,22 @@ const ComplainSchema = new mongoose.Schema({
   serviceType: {
     type: String,
   },
-  photo: { 
-    type: String 
+  photo: {
+    type: String
   },
-  fieldType: { 
+  fieldType: {
     type: String,
-    required: true 
+    required: true
   },
   status: {
     type: String,
-    enum: ["pending", "accepted", "rejected","reviewed"],
+    enum: ["pending", "accepted", "rejected", "reviewed"],
     default: "pending",
+  }
+},
+  {
+    timestamps: true,
   },
-  createdAt: { type: Date, default: Date.now },
-});
+);
 
 module.exports = mongoose.model("Complaint", ComplainSchema);

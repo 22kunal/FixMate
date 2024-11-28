@@ -34,6 +34,94 @@ const BillDetails = () => {
     navigate(-1);
   };
 
+  const handlePayment = async () => {
+    try {
+      setIsLoading(true);
+      const orderResponse = await fetch("http://localhost:5000/api/bill/create-payment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          complaintId: workDetails._id,
+        }),
+      });
+
+      if (!orderResponse.ok) {
+        throw new Error("Failed to create order");
+      }
+
+      const { id: order_id, amount, currency } = await orderResponse.json();
+
+      const options = {
+        key: "rzp_test_9pvIQ4B6FWjGWz",
+        amount,
+        currency,
+        order_id,
+        name: "Fix Mate",
+        description: "Service Payment",
+        handler: async function (response) {
+        const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = response;
+
+        try {
+          const verifyResponse = await fetch(
+            "http://localhost:5000/api/bill/verify-payment",
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id,
+                razorpay_payment_id,
+                razorpay_signature,
+              }),
+            }
+          );
+
+          if (!verifyResponse.ok) {
+            throw new Error("Payment verification failed");
+          }
+
+          const result = await verifyResponse.json();
+
+          if (result.message === "Payment verified successfully") {
+            // Only mark as successful if the verification was successful
+            const successResponse = await fetch("http://localhost:5000/api/bill/payment-succes", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id, // Send order id for final processing
+              }),
+            });
+
+            if (successResponse.ok) {
+              toast.success("Payment successful!");
+              // Optionally, update the UI or redirect
+            } else {
+              toast.error("Failed to mark payment as successful.");
+            }
+          }
+        } catch (error) {
+          console.error("Error during payment handling:", error);
+          toast.error("An error occurred during payment verification.");
+        }
+        },
+        prefill: {
+          name: workDetails.name,
+          email: workDetails.email,
+          contact: workDetails.phone,
+        },
+      };
+
+      const razorpay = new window.Razorpay(options);
+      razorpay.open();
+    } catch (error) {
+      console.error("Error during payment:", error);
+    } finally {
+      setIsLoading(false);
+      handleStatusChange(workDetails._id, "paid");
+    }
+  };
+
   const handleProceed = async () => {
     if (!serviceCharges || serviceCharges <= 0) {
       toast.error("Please enter a valid service charge.");
@@ -41,6 +129,7 @@ const BillDetails = () => {
     }
     setIsLoading(true);
     const billData = {
+      complaintId: workDetails._id,
       serviceCharges,
       taxAmount,
       totalAmount,
@@ -63,23 +152,24 @@ const BillDetails = () => {
 
       const data = await response.json();
       toast.success(data.message);
+      handleStatusChange(workDetails._id, "reviewed", data.bill._id);
     } catch (error) {
       console.error("Error:", error);
       toast.error("Failed to create the bill. Please try again.");
     } finally {
       setIsLoading(false);
-      handleStatusChange(workDetails._id, "reviewed");
       handleGoBack();
     }
   };
 
-  const handleStatusChange = async (workId, newStatus) => {
+  const handleStatusChange = async (workId, newStatus,id) => {
     try {
       const response = await fetch(`http://localhost:5000/api/work-status`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
           workId, 
+          BillId: id,
           status: newStatus,
           vendorName: name,
           serviceType: fieldsOfExpertise,
@@ -89,20 +179,13 @@ const BillDetails = () => {
           taxRate,
         }),
       });
-      if (response.ok) {
-        setUpcomingWork((prevWork) =>
-          prevWork.map((work) =>
-            work._id === workId ? { ...work, status: newStatus } : work
-          )
-        );
-      } else {
+      if (!response.ok) {
         console.error("Failed to update status");
       }
     } catch (error) {
       console.error("Error updating status:", error);
     }
   };
-  console.log(workDetails)
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -138,7 +221,9 @@ const BillDetails = () => {
             <div className="grid grid-cols-2 gap-4 p-4 bg-gray-100 rounded-lg">
               <div>
                 <p className="text-sm text-gray-600">Vendor Name</p>
-                <p className="font-medium">{isCustomer? workDetails.vendorName : name}</p>
+                <p className="font-medium">
+                  {isCustomer ? workDetails.vendorName : name}
+                </p>
               </div>
               <div>
                 <p className="text-sm text-gray-600">Domain</p>
@@ -202,12 +287,22 @@ const BillDetails = () => {
               </div>
               <div className="flex justify-between">
                 <p className="text-sm text-gray-600">Tax (12%)</p>
-                <p className="font-medium">₹{isVendor? taxAmount.toFixed(2): workDetails.taxAmount.toFixed(2)}</p>
+                <p className="font-medium">
+                  ₹
+                  {isVendor
+                    ? taxAmount.toFixed(2)
+                    : workDetails.taxAmount.toFixed(2)}
+                </p>
               </div>
               <p className="text-xs">Mode of Payment : Online</p>
               <div className="flex justify-between border-t pt-2">
                 <p className="font-semibold">Total Amount (including tax)</p>
-                <p className="font-bold text-lg">₹{isVendor? totalAmount.toFixed(2): workDetails.totalAmount.toFixed(2)}</p>
+                <p className="font-bold text-lg">
+                  ₹
+                  {isVendor
+                    ? totalAmount.toFixed(2)
+                    : workDetails.totalAmount.toFixed(2)}
+                </p>
               </div>
             </div>
           </div>
@@ -229,13 +324,23 @@ const BillDetails = () => {
               Negotiate
             </button>
           )}
-          <button
-            onClick={handleProceed}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            disabled={isLoading}
-          >
-            {isCustomer ? "Pay now" : isLoading ? "Creating Bill..." : "Send"}
-          </button>
+          {isCustomer ? (
+            <button
+              onClick={handlePayment}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={isLoading}
+            >
+              {isLoading ? "..." : "Pay now"}
+            </button>
+          ) : (
+            <button
+              onClick={handleProceed}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              disabled={isLoading}
+            >
+              {isLoading ? "Creating Bill..." : "Send"}
+            </button>
+          )}
         </div>
       </div>
 
