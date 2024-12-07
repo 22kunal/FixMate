@@ -39,6 +39,10 @@ const BillDetails = () => {
       toast.error("Please enter a valid service charge.");
       return;
     }
+    if(isCustomer){
+      toast.error("You have to pay after the work is done.")
+      return;
+    }
     setIsLoading(true);
     const billData = {
       serviceCharges,
@@ -143,7 +147,7 @@ const BillDetails = () => {
               <div>
                 <p className="text-sm text-gray-600">Domain</p>
                 <p className="font-medium">
-                  {isVendor ? fieldsOfExpertise : workDetails.serviceType}
+                  {isVendor ? fieldsOfExpertise : workDetails.fieldType}
                 </p>
               </div>
             </div>

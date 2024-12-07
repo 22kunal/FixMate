@@ -13,7 +13,7 @@ const MetricBox = ({ icon: Icon, label, value, color }) => (
   </div>
 );
 
-const AdminDashboard = () => {
+const AdminDashboard = () => { 
   const adminInfo = {
     name: "Jacob Nejam",
     role: "Administrator"
