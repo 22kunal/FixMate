@@ -138,11 +138,21 @@ function ServiceWorker() {
                     {work.status === "rejected" && (
                       <button className="btn-reject">Rejected</button>
                     )}
-                    {work.status === "accepted" && (
+                    {work.status === "accepted" || work.status === "paid" && (
                       <button className="btn-accept">Accepted</button>
                     )}
                     {work.status === "reviewed" && (
                       <>
+                      <button
+                          className="btn-direction bg-green-500"
+                          onClick={() =>
+                            navigate("/Direction", {
+                              state: { workDetails: work },
+                            })
+                          }
+                        >
+                          Directions
+                        </button>
                         <button
                           className="btn-accept bg-pink-500"
                           onClick={() =>

@@ -1,12 +1,14 @@
 import { FaRegUser } from "react-icons/fa";
-import { CiSearch } from "react-icons/ci";
 import { useState,useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { useContext } from "react";
 import { AuthContext } from "../context/AuthContext";
-
+import { FaHeadset } from "react-icons/fa"; 
+import '/src/styles/Navbar.css';
+import emailjs from 'emailjs-com';
+import questions from '../data/query'; 
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -19,6 +21,72 @@ const Navbar = () => {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [filteredQuestions, setFilteredQuestions] = useState([]);
+  const [userQuery, setUserQuery] = useState("");
+  
+
+
+  const toggleSupportModal = () => {
+    setIsSupportModalOpen(!isSupportModalOpen);
+    setSearchQuery(""); 
+    setFilteredQuestions([]);
+  };
+
+  const handleSearchChange = (e) => {
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+
+  
+    const filtered = questions.filter(q =>
+      q.question.toLowerCase().includes(query)
+    );
+    setFilteredQuestions(filtered);
+  };
+
+  const handleQuestionClick = (answer) => {
+
+    toast.error(answer,{autoClose:5000});
+    setIsSupportModalOpen(false); 
+  };
+
+  const handleSendQuery = () => {
+    if (!searchQuery.trim()) {
+      toast.error('Please enter a query before sending.');
+      return;
+    }
+    if (!isLoggedIn) {
+      toast.error("You need to be logged in to send a query!");
+      return;
+    }
+    const token = localStorage.getItem("jwtToken");
+    if (!token) {
+      toast.error("Session expired. Please log in again.");
+      return;
+
+    }
+
+    const templateParams = {
+      from_email: email, 
+      message: searchQuery,
+    };
+    
+    emailjs.send('service_h6ncw2r', 'template_cjebj34', templateParams, '83LfTWpqVM10PMLvl')
+        .then((response) => {
+            console.log('SUCCESS!', response.status, response.text);
+            toast.success("Your query has been sent to the admin!");
+            setUserQuery("");
+        })
+        .catch((err) => {
+            console.error('FAILED...', err);
+            toast.error("Failed to send your query. Please try again.");
+        }); 
+  };
+
+
+
 
   const [userName, setUserName] = useState("");
   const [location, setLocation] = useState("Select Location");
@@ -83,11 +151,8 @@ const Navbar = () => {
       })
         .then((response) => {
           if (response.ok) {
-            // Token is valid
-            // toast.success("jwt logged in successfully");
             return response.json();
           } else {
-            // Token is invalid
             throw new Error("Invalid token");
           }
         })
@@ -95,7 +160,7 @@ const Navbar = () => {
           setIsLoggedIn(true);
           setUserName(data.name);
           setVendor(data.isVendor);
-          // handleLogin(token, data.name, data.id, data.isVendor);
+          setIsAdmin(data.isAdmin);
         })
         .catch(() => {
           localStorage.removeItem("jwtToken");
@@ -132,7 +197,7 @@ const Navbar = () => {
         body: JSON.stringify({ email, password }),
       });
       if (response.ok) {
-        const { token, name, isVendor, id, fieldsOfExpertise,isAdmin:admin } = await response.json();
+        const { token, name, isVendor, id, fieldsOfExpertise, isAdmin: admin } = await response.json();
         localStorage.setItem("jwtToken", token);
         handleLogin(token, name, id,isVendor,fieldsOfExpertise);
         setVendor(isVendor); 
@@ -210,9 +275,10 @@ const Navbar = () => {
       toast.error("Please sign in!");
     }
   };
-  console.log(isAdmin);
+
   
   return (
+    
     <nav className="navbar">
       {/* Logo */}
       <Link to="/" className="navbar-logo">
@@ -230,7 +296,7 @@ const Navbar = () => {
         >
           Home
         </Link>
-        {Vendor && isLoggedIn ? (
+        {!isAdmin && (Vendor && isLoggedIn ? (
           <Link
             to="/ServiceWorker"
             className={`${
@@ -266,7 +332,7 @@ const Navbar = () => {
               Complain
             </Link>
           </>
-        )}
+        ))}
         {isAdmin && isLoggedIn && (
           <Link
             to="/admin"
@@ -288,10 +354,7 @@ const Navbar = () => {
           <span>{error ? error : location}</span>
           <span className="dropdown-arrow">▼</span>
         </div>
-        {/* <div className="navbar-search">
-          <CiSearch />
-          <input type="text" placeholder="Search for ‘AC services’" />
-        </div> */}
+        
       </div>
 
       {/* Icons */}
@@ -303,9 +366,44 @@ const Navbar = () => {
             Sign In
           </span>
         )}
-        <FaRegUser style={{ fontSize: "25px" }} />
-      </div>
+        <FaRegUser  style={{ fontSize: "25px", marginLeft: "10px" }} /> 
 
+        <div style={{ display: 'flex', alignItems: 'center', marginLeft: '10px', cursor: 'pointer' }}>
+          <FaHeadset style={{ fontSize: "25px" }} onClick={toggleSupportModal} />
+        </div>
+              {/* Support Modal */}
+              {isSupportModalOpen && (
+                <div className="modal-overlay" onClick={toggleSupportModal}>
+                    <div className="modal-content support-modal" onClick={(e) => e.stopPropagation()}>
+                        <h2>Support</h2>
+                        <input
+                            type="text"
+                            placeholder="Type your question..."
+                            className="support-input"
+                            value={searchQuery}
+                            onChange={handleSearchChange}
+                        />
+                        <div className="support-questions">
+                            {filteredQuestions.length > 0 ? (
+                                filteredQuestions.map((q, index) => (
+                                    <div key={index} className="support-question" onClick={() => handleQuestionClick(q.answer)}>
+                                        {q.question}
+                                    </div>
+                                ))
+                            ) : (
+                                <div>
+                                  <button onClick={handleSendQuery} className="send-query-button">
+                                      Send Query
+                                  </button>
+                              </div>
+
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+      </div>
+      
       {/* Dropdown */}
       {isDropdownOpen && isLoggedIn && (
         <div className="dropdown-menu">

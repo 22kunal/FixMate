@@ -75,6 +75,24 @@ router.post("/signin", async (req, res) => {
   }
 });
 
+router.get("/vendors", async (req, res) => {
+  try {
+    const users = await User.find({isVendor: true}).sort({ createdAt: -1 });
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get("/customers", async (req, res) => {
+  try {
+    const users = await User.find({isVendor: false}).sort({ createdAt: -1 });
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // Middleware to check JWT
 const authenticateToken = (req, res, next) => {
   const authHeader = req.headers['authorization'];

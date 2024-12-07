@@ -52,12 +52,14 @@ router.get('/upcoming-work', async (req, res) => {
     if (user.isVendor) {
       const upcomingWork = await Complaint.find({
         fieldType: user.fieldsOfExpertise,
-      }); 
+      }).sort({ createdAt: -1 }); 
       return res.json(upcomingWork);
     } 
 
-    const upcomingWork = await Complaint.find({id: userId}); 
-    res.json(upcomingWork);
+    const upcomingWork = await Complaint.find({ id: userId }).sort({
+      createdAt: -1,
+    }); 
+    return res.json(upcomingWork);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch upcoming work data' });
   }
@@ -66,6 +68,7 @@ router.get('/upcoming-work', async (req, res) => {
 router.put("/work-status", async (req, res) => {
   const {
     workId,
+    BillId,
     status,
     vendorName,
     serviceType,
@@ -88,6 +91,7 @@ router.put("/work-status", async (req, res) => {
 
     const updatedWork = await Complaint.findByIdAndUpdate(workId, {
       status,
+      BillId: BillId ? BillId : null,
       vendorName,
       serviceType,
       serviceCharges,
@@ -101,5 +105,13 @@ router.put("/work-status", async (req, res) => {
   }
 });
 
+router.get("/complain/all", async (req, res) => {
+  try {
+    const complaints = await Complaint.find().sort({ createdAt: -1 });
+    res.status(200).json(complaints);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch complaints" });
+  }
+});
 
 module.exports = router;
