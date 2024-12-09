@@ -111,7 +111,7 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const emailRegex = /^[^\s@]+@gmail\.com$/;
     return emailRegex.test(email);
   };
 
@@ -142,6 +142,7 @@ const Navbar = () => {
 
   useEffect(() => {
     const token = localStorage.getItem("jwtToken");
+    const role = localStorage.getItem("userRole");
     if (token) {
       // Validate token
       fetch("http://localhost:5000/api/auth/validate", {
@@ -163,6 +164,15 @@ const Navbar = () => {
           setUserName(data.name);
           setVendor(data.isVendor);
           setIsAdmin(data.isAdmin);
+
+          if (token && role) {
+            if (role === "vendor") {
+              navigate("/ServiceWorker", { replace: true });
+            } else if (role === "admin") {
+              navigate("/admin", { replace: true });
+            }
+          }
+      
         })
         .catch(() => {
           localStorage.removeItem("jwtToken");
@@ -209,6 +219,24 @@ const Navbar = () => {
         setIsSignInModalOpen(false);
         setIsDropdownOpen(false);
         setIsAdmin(admin);
+
+        let userRole = "user";
+        if (admin) {
+          userRole = "admin";
+        } else if (isVendor) {
+          userRole = "vendor";
+        }
+        localStorage.setItem("userRole", userRole);
+
+        if (token && userRole) {
+          if (userRole === "vendor") {
+            navigate("/ServiceWorker", { replace: true });
+          } else if (userRole === "admin") {
+            navigate("/admin", { replace: true });
+          }
+        }
+
+        toast.success("Logged in successfully");
       } else {
         const error = await response.json();
         toast.error(error.error);
@@ -317,14 +345,14 @@ const Navbar = () => {
 
       {/* Links */}
       <div className="navbar-links">
-        <Link
+        {!Vendor && !isAdmin && <Link
           to="/"
           className={`${
             active == "/" ? "text-black" : "text-gray-600 hover:text-gray-800"
           }`}
         >
           Home
-        </Link>
+        </Link>}
         {!isAdmin && (Vendor && isLoggedIn ? (
           <Link
             to="/ServiceWorker"
@@ -446,6 +474,7 @@ const Navbar = () => {
               setIsLoggedIn(false);
               setUserName("");
               localStorage.removeItem("jwtToken");
+              localStorage.removeItem("userRole");
               toast.info("Logged out successfully");
               navigate("/");
             }}

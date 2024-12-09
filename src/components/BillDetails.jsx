@@ -8,7 +8,7 @@ const BillDetails = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { workDetails } = location.state || {};
-  const [serviceCharges, setServiceCharges] = useState(workDetails.serviceCharges || 0);
+  const [serviceCharges, setServiceCharges] = useState(workDetails?.serviceCharges || 0);
   const [isLoading, setIsLoading] = useState(false);
   const taxRate = 0.12;
   const taxAmount = serviceCharges * taxRate;
@@ -51,7 +51,12 @@ const BillDetails = () => {
         throw new Error("Failed to create order");
       }
 
-      const { id: order_id, amount, currency } = await orderResponse.json();
+      const {
+        id: order_id,
+        amount,
+        currency,
+        billId,
+      } = await orderResponse.json();
 
       const options = {
         key: "rzp_test_9pvIQ4B6FWjGWz",
@@ -84,18 +89,21 @@ const BillDetails = () => {
           const result = await verifyResponse.json();
 
           if (result.message === "Payment verified successfully") {
-            // Only mark as successful if the verification was successful
-            const successResponse = await fetch("http://localhost:5000/api/bill/payment-succes", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                razorpay_order_id, // Send order id for final processing
-              }),
-            });
+            const successResponse = await fetch(
+              "http://localhost:5000/api/bill/payment-succes",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  complaintId: workDetails._id,
+                  billId: billId,
+                }),
+              }
+            );
 
             if (successResponse.ok) {
               toast.success("Payment successful!");
-              // Optionally, update the UI or redirect
+              handleGoBack();
             } else {
               toast.error("Failed to mark payment as successful.");
             }
@@ -118,7 +126,7 @@ const BillDetails = () => {
       console.error("Error during payment:", error);
     } finally {
       setIsLoading(false);
-      handleStatusChange(workDetails._id, "paid");
+      handleStatusChange(workDetails._id, "paid", id = billId);
     }
   };
 
@@ -161,12 +169,12 @@ const BillDetails = () => {
       console.error("Error:", error);
       toast.error("Failed to create the bill. Please try again.");
     } finally {
-      setIsLoading(false);
       handleGoBack();
+      setIsLoading(false);
     }
   };
 
-  const handleStatusChange = async (workId, newStatus,id) => {
+  const handleStatusChange = async (workId, newStatus,id="") => {
     try {
       const response = await fetch(`http://localhost:5000/api/work-status`, {
         method: "PUT",
@@ -188,8 +196,43 @@ const BillDetails = () => {
       }
     } catch (error) {
       console.error("Error updating status:", error);
+    }finally{
+      handleGoBack();
     }
   };
+
+  const handleNegotiation = async () => {
+    if (!negotiatedPrice || negotiatedPrice <= 0) {
+      toast.succes("Please enter a valid negotiated amount.");
+      return;
+    }
+
+    try {
+      const data = await fetch("http://localhost:5000/api/bill/update-negotiated-amount", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          complaintId: workDetails._id,
+          negotiatedAmount: parseFloat(negotiatedPrice),
+        }),
+      });
+      const response = await data.json();
+
+      if (response) {
+        toast.success("Negotiated bill sent successfully");
+        console.log("Updated Bill: ", response);
+      }
+    } catch (error) {
+      console.error("Error updating negotiated amount:", error);
+      toast.error("Failed to send negotiated amount");
+    } finally {
+      handleGoBack();
+    }
+  };
+
+  console.log("Work Details:", workDetails);
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -308,44 +351,98 @@ const BillDetails = () => {
                     : workDetails.totalAmount.toFixed(2)}
                 </p>
               </div>
+              {!showNegotiateBox && negotiatedPrice && (
+                <div className="flex justify-between border-t pt-2">
+                  <p className="font-medium">Negotiated Price:</p>
+                  <p className="font-medium text-lg">{negotiatedPrice}</p>
+                </div>
+              )}
+              {isVendor && (
+                <div className="flex justify-between border-t pt-2">
+                  <p className="font-medium">Negotiated Price:</p>
+                  <p className="font-medium text-lg">{workDetails.negotiatedAmount}</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
 
         {/* Footer with Buttons */}
-        <div className="flex justify-end space-x-4 p-6 border-t">
-          <button
-            onClick={handleGoBack}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            Go Back
-          </button>
-          {isCustomer && (
+        {negotiatedPrice && !showNegotiateBox ? (
+          <div className="flex justify-end space-x-4 p-6 border-t">
             <button
-              onClick={handleNegotiateClick}
-              className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+              onClick={() => {
+                setNegotiatedPrice("");
+              }}
+              className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
-              Negotiate
+              Cancel
             </button>
-          )}
-          {isCustomer ? (
             <button
-              onClick={handlePayment}
+              onClick={() => handleNegotiation()}
               className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              disabled={isLoading}
             >
-              {isLoading ? "..." : "Pay now"}
+              send this bill
             </button>
-          ) : (
-            <button
-              onClick={handleProceed}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              disabled={isLoading}
-            >
-              {isLoading ? "Creating Bill..." : "Send"}
-            </button>
-          )}
-        </div>
+          </div>
+        ) : (
+          workDetails.status != "accepted" && (
+            <div className="flex justify-end space-x-4 p-6 border-t">
+                {isCustomer && (
+                  <button
+                    onClick={() => {
+                      handleStatusChange(workDetails._id, "rejected");
+                    }}
+                    className="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  >
+                    Reject
+                  </button>
+                )}
+                {workDetails?.negotiatedAmount && isVendor &&
+                <button
+                  onClick={() => {
+                    setServiceCharges(workDetails.negotiatedAmount);
+                  }}
+                  className="px-6 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors"
+                  >
+                  Accept negotiated amount
+                </button>
+                  
+              }
+              <button
+                onClick={handleGoBack}
+                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Go Back
+              </button>
+              {isCustomer && (
+                <button
+                  onClick={handleNegotiateClick}
+                  className="px-6 py-2 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors"
+                >
+                  Negotiate
+                </button>
+              )}
+              {isCustomer ? (
+                <button
+                  onClick={handlePayment}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "..." : "Pay now"}
+                </button>
+              ) : (
+                <button
+                  onClick={handleProceed}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Creating Bill..." : "Send"}
+                </button>
+              )}
+            </div>
+          )
+        )}
       </div>
 
       {/* Negotiate Modal */}

@@ -32,6 +32,16 @@ function ServiceWorker() {
     fetchData();
   }, [id]);
 
+  const [selectedImage, setSelectedImage] = useState(null);
+
+  const handleImageClick = (imagePath) => {
+    setSelectedImage(imagePath);
+  };
+
+  const closeModal = () => {
+    setSelectedImage(null);
+  };
+
   const handleStatusChange = async (workId, newStatus) => {
      
      try {
@@ -98,7 +108,12 @@ function ServiceWorker() {
         {upcomingWork.length > 0 ? (
           upcomingWork.map((work) => (
             <div className="work-item" key={work._id}>
-              <div className="work-image">
+              <div
+                className="work-image"
+                onClick={() =>
+                  handleImageClick(`../../server/public${work.photo}`)
+                }
+              >
                 <img src={`../../server/public${work.photo}`} alt="Work" />
               </div>
               <div className="work-details">
@@ -138,12 +153,12 @@ function ServiceWorker() {
                     {work.status === "rejected" && (
                       <button className="btn-reject">Rejected</button>
                     )}
-                    {work.status === "accepted" || work.status === "paid" && (
+                    {(work.status === "accepted" || work.status === "paid") && (
                       <button className="btn-accept">Accepted</button>
                     )}
                     {work.status === "reviewed" && (
                       <>
-                      <button
+                        {/* <button
                           className="btn-direction bg-green-500"
                           onClick={() =>
                             navigate("/Direction", {
@@ -152,7 +167,7 @@ function ServiceWorker() {
                           }
                         >
                           Directions
-                        </button>
+                        </button> */}
                         <button
                           className="btn-accept bg-pink-500"
                           onClick={() =>
@@ -177,6 +192,27 @@ function ServiceWorker() {
           <p className="no-work-message">No upcoming work available.</p>
         )}
       </div>
+
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+          onClick={closeModal}
+        >
+          <div className="relative max-w-4xl w-full">
+            <button
+              onClick={closeModal}
+              className="absolute top-2 right-2 bg-white rounded-full p-1 text-black"
+            >
+              ✖
+            </button>
+            <img
+              src={selectedImage}
+              alt="Enlarged Work"
+              className="w-full h-auto rounded-lg"
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
