@@ -54,7 +54,11 @@ const ComplainSchema = new mongoose.Schema({
     type: String,
     enum: ["pending", "accepted", "rejected", "reviewed"],
     default: "pending",
-  }
+  },
+  negotiatedAmount: {
+    type: Number,
+    default: null,
+  },
 },
   {
     timestamps: true,

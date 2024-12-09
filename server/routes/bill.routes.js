@@ -71,6 +71,38 @@ router.post("/create", async (req, res) => {
   }
 });
 
+router.put("/update-negotiated-amount", async (req, res) => {
+  const { complaintId, negotiatedAmount } = req.body;
+
+  if (!complaintId || !negotiatedAmount) {
+    return res
+      .status(400)
+      .json({ message: "Bill ID and Negotiated Amount are required" });
+  }
+  try {
+    const complaint = await Complaint.findOne({ _id: complaintId });
+    const bill = await Bill.findOne({ complaintId: complaintId });
+
+    if (!bill) {
+      return res.status(404).json({ message: "Bill not found" });
+    }
+
+    complaint.negotiatedAmount = negotiatedAmount;
+    bill.negotiatedAmount = negotiatedAmount;
+
+    await complaint.save();
+    await bill.save();
+
+    res.status(200).json({
+      message: "Negotiated amount updated successfully",
+      bill,
+    });
+  } catch (error) {
+    console.error("Error updating negotiated amount:", error);
+    res.status(500).json({ message: "Failed to update negotiated amount" });
+  }
+});
+
 router.get("/all", async (req, res) => {
   try {
     const bills = await Bill.find().sort({ createdAt: -1 });
@@ -93,7 +125,6 @@ router.post("/create-payment", async (req, res) => {
     if (!complaint || !complaint.BillId) {
       return res.status(404).json({ message: "Complaint or Bill not found" });
     }
-
     const bill = complaint.BillId;
     const options = {
       amount: complaint.totalAmount * 100,
@@ -107,6 +138,7 @@ router.post("/create-payment", async (req, res) => {
       id: order.id,
       amount: order.amount,
       currency: order.currency,
+      billId: bill._id,
     });
   } catch (error) {
     console.error("Error creating Razorpay order:", error);
@@ -145,26 +177,25 @@ router.post("/verify-payment", async (req, res) => {
 
 router.post("/payment-succes", async (req, res) => {
   try {
-    const { razorpay_order_id } = req.body;
+    const { complaintId,billId } = req.body;
+    
+    const complaint = await Complaint.findById(complaintId);
+    const bill = await Bill.findById(billId);
 
-    const complaint = await Complaint.findOne({
-      "BillId.razorpay_order_id": razorpay_order_id,
-    }).populate("BillId");
-
-    if (!complaint || !complaint.BillId) {
+    if (!complaint || !bill) {
       return res.status(404).json({ message: "Complaint or Bill not found" });
     }
 
     complaint.status = "accepted";
-    complaint.BillId.status = "paid";
+    bill.status = "paid";
 
     await complaint.save();
-    await complaint.BillId.save();
+    await bill.save();
 
     res.status(200).json({
       message: "Payment successful",
       complaint,
-      bill: complaint.BillId,
+      bill
     });
   } catch (error) {
     console.error("Error handling payment success:", error);

@@ -58,11 +58,18 @@ const AuthProvider = ({ children }) => {
       fieldsOfExpertise,
       isAdmin,
     });
-    toast.success("Logged in successfully");
+    let userRole = "user";
+    if (isAdmin) {
+      userRole = "admin";
+    }else if (isVendor) {
+      userRole = "vendor";
+    }
+    localStorage.setItem("userRole", userRole);
   };
 
   const handleLogout = () => {
     localStorage.removeItem("jwtToken");
+    localStorage.removeItem("userRole");
     setAuthData({
       token: null,
       name: "",
