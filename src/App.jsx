@@ -4,7 +4,9 @@ import HomePage from "./components/HomePage";
 import TopCategory from "./components/TopCategory";
 import Footer from "./components/Footer";
 import Navbar from "./components/Navbar";
+import Direction from "./components/Direction";
 import ComplainCreation from "./components/ComplainCreation";
+
 import {
   BrowserRouter as Router,
   Route,
@@ -62,6 +64,14 @@ function App() {
             element={
               <ProtectedRoute roleType={["user", "vendor"]}>
                 <BillDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/Direction" // Add this route for Direction
+            element={
+              <ProtectedRoute roleType={["user", "vendor"]}>
+                <Direction />
               </ProtectedRoute>
             }
           />

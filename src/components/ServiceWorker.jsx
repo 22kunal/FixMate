@@ -158,7 +158,7 @@ function ServiceWorker() {
                     )}
                     {work.status === "reviewed" && (
                       <>
-                        {/* <button
+                        <button
                           className="btn-direction bg-green-500"
                           onClick={() =>
                             navigate("/Direction", {
@@ -167,7 +167,7 @@ function ServiceWorker() {
                           }
                         >
                           Directions
-                        </button> */}
+                        </button>
                         <button
                           className="btn-accept bg-pink-500"
                           onClick={() =>
