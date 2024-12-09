@@ -24,7 +24,7 @@ const upload = multer({
 // form submission
 router.post("/complain",upload, async (req, res) => {
   try {
-    const { id, name, phone, address, description, fieldType } = req.body;
+    const { id, name, phone, address, description, fieldType,lon,lat } = req.body;
     const photo = req.file ? `/uploads/${req.file.filename}` : "";
 
     const ComplaintData = new Complaint({
@@ -35,6 +35,8 @@ router.post("/complain",upload, async (req, res) => {
       description,
       photo,
       fieldType,
+      lon,
+      lat
     });
 
     await ComplaintData.save();

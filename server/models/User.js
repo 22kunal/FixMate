@@ -34,6 +34,13 @@ const UserSchema = new mongoose.Schema({
       required: function () {
         return this.isVendor;
       },
+    },
+    otp:{
+      type: Number,
+    },
+    isVerified:{
+      type: Boolean,
+      default: false,
     }
 });
 

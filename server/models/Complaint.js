@@ -59,6 +59,12 @@ const ComplainSchema = new mongoose.Schema({
     type: Number,
     default: null,
   },
+  lat:{
+    type: String,
+  },
+  lon:{
+    type: String,
+  }
 },
   {
     timestamps: true,

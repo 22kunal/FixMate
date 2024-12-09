@@ -47,6 +47,8 @@ const ComplainForm = () => {
   const handleSubmit = async(e) => {
     e.preventDefault();
       const form = new FormData();
+
+
       form.append("photo", formData.photo);
       form.append("id", formData.id);
       form.append("name", formData.name);
@@ -54,6 +56,10 @@ const ComplainForm = () => {
       form.append("address", formData.address);
       form.append("description", formData.description);
       form.append("fieldType", formData.fieldType);
+      form.append("lat",localStorage.getItem("lat"));
+      form.append("lon",localStorage.getItem("lon"))
+
+      console.log(form)
     
     try {
       const response = await fetch("http://localhost:5000/api/complain", {

@@ -31,7 +31,12 @@ const BillDetails = () => {
   }
 
   const handleGoBack = () => {
-    navigate(-1);
+    if(isCustomer){
+      navigate("/History");
+    }
+    if(isVendor){
+      navigate("/ServiceWorker");
+    }
   };
 
   const handlePayment = async () => {
@@ -125,6 +130,10 @@ const BillDetails = () => {
   const handleProceed = async () => {
     if (!serviceCharges || serviceCharges <= 0) {
       toast.error("Please enter a valid service charge.");
+      return;
+    }
+    if(isCustomer){
+      toast.error("You have to pay after the work is done.")
       return;
     }
     setIsLoading(true);
@@ -228,7 +237,7 @@ const BillDetails = () => {
               <div>
                 <p className="text-sm text-gray-600">Domain</p>
                 <p className="font-medium">
-                  {isVendor ? fieldsOfExpertise : workDetails.serviceType}
+                  {isVendor ? fieldsOfExpertise : workDetails.fieldType}
                 </p>
               </div>
             </div>

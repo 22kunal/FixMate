@@ -8,7 +8,7 @@ import { AuthContext } from "../context/AuthContext";
 import { FaHeadset } from "react-icons/fa"; 
 import '/src/styles/Navbar.css';
 import emailjs from 'emailjs-com';
-import questions from '../data/query'; 
+import questions from '../data/query';
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -16,6 +16,7 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [verfiyModalOpen, setVerfiyModalOpen] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -73,11 +74,13 @@ const Navbar = () => {
       message: searchQuery,
     };
     
-    emailjs.send('service_h6ncw2r', 'template_cjebj34', templateParams, '83LfTWpqVM10PMLvl')
+    // emailjs.send('service_h6ncw2r', 'template_cjebj34', templateParams, '83LfTWpqVM10PMLvl')
+    emailjs.send('service_5ppnex4', 'template_934qho3', templateParams, 'WLAcpHtLHPUJQks9C')
         .then((response) => {
             console.log('SUCCESS!', response.status, response.text);
             toast.success("Your query has been sent to the admin!");
             setUserQuery("");
+            setIsSupportModalOpen(false)
         })
         .catch((err) => {
             console.error('FAILED...', err);
@@ -101,6 +104,7 @@ const Navbar = () => {
   const path = useLocation();
   const [active, setActive] = useState(path.pathname);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [OTP,setOTP] = useState();
   
   useEffect(() => {
     setActive(path.pathname);
@@ -124,6 +128,9 @@ const Navbar = () => {
   const showPosition = async (position) => {
     const lat = position.coords.latitude;
     const lon = position.coords.longitude;
+
+    localStorage.setItem("lat", lat);
+    localStorage.setItem("lon", lon);
 
     try {
       const response = await fetch(
@@ -207,10 +214,11 @@ const Navbar = () => {
         body: JSON.stringify({ email, password }),
       });
       if (response.ok) {
+        setIsSignUpModalOpen(false);
         const { token, name, isVendor, id, fieldsOfExpertise, isAdmin: admin } = await response.json();
         localStorage.setItem("jwtToken", token);
         handleLogin(token, name, id,isVendor,fieldsOfExpertise);
-        setVendor(isVendor); 
+        setVendor(isVendor);
         setUserName(name);
         setIsLoggedIn(true);
         setIsSignInModalOpen(false);
@@ -270,16 +278,45 @@ const Navbar = () => {
         }),
       });
       if (response.ok) {
+        toast.success("Please verify");
         setIsSignUpModalOpen(false);
-        setIsSignInModalOpen(true);
-        toast.success("Account created successfully");
+        setVerfiyModalOpen(true);
       } else {
-        toast.error("Account exists");
+        toast.error("Account not verified");
+        setVerfiyModalOpen(true);
       }
     } catch (error) {
       console.error("Error:", error);
     }
   };
+
+  const handleVerify = async()=>{
+    if(!OTP || OTP<=0) toast.error("OTP is invalid");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/verify-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          OTP
+        }),
+      });
+      if (response.ok) {
+        const data = await response.json();
+        if(data.success){
+          setVerfiyModalOpen(false);
+          setIsSignUpModalOpen(false);
+          setIsSignInModalOpen(true);
+          toast.success(data.message);
+        }else toast.error(data.message);
+      } else {
+        toast.error("Account not verified");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
 
   const toggleVendorCheckbox = () => {
     setIsVen(!isVen);
@@ -435,9 +472,9 @@ const Navbar = () => {
       {/* Dropdown */}
       {isDropdownOpen && isLoggedIn && (
         <div className="dropdown-menu">
-          <a href="#" className="dropdown-item">
+          {/* <a href="#" className="dropdown-item">
             Profile
-          </a>
+          </a> */}
           <a
             href="#"
             className="dropdown-item"
@@ -557,6 +594,32 @@ const Navbar = () => {
 
             <button className="modal-button" onClick={handleSignUp}>
               Sign Up
+            </button>
+          </div>
+        </div>
+      )}
+
+      {verfiyModalOpen && (
+        <div className="modal-overlay" onClick={()=>setVerfiyModalOpen(false) }>
+          <div
+            className="modal-content sign-in-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2>Verify your account</h2>
+            <input
+              type="Number"
+              placeholder="Enter your OTP"
+              className="sign-in-input"
+              value={OTP}
+              onChange={(e) => setOTP(e.target.value)}
+            />
+            <button className="modal-button" onClick={()=>{
+              setVerfiyModalOpen(false)
+            }}>
+              Cancel
+            </button>
+            <button className="modal-button" onClick={handleVerify}>
+              Verify
             </button>
           </div>
         </div>

@@ -1,8 +1,8 @@
 const questions = [
-  {
-      question: "How can I reset my password?",
-      answer: "To reset your password, go to the login page and click on 'Forgot Password'.",
-  },
+//   {
+//       question: "How can I reset my password?",
+//       answer: "To reset your password, go to the login page and click on 'Forgot Password'.",
+//   },
   {
       question: "How to create a complaint?",
       answer: "Click on the 'Complain' section and fill in the required details.",
