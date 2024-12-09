@@ -86,7 +86,7 @@ router.get("/vendors", async (req, res) => {
 
 router.get("/customers", async (req, res) => {
   try {
-    const users = await User.find({isVendor: false}).sort({ createdAt: -1 });
+    const users = await User.find({ $and: [{isVendor: false}, {isAdmin: false}] }).sort({ createdAt: -1 });
     res.status(200).json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
