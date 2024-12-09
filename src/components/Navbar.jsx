@@ -8,7 +8,7 @@ import { AuthContext } from "../context/AuthContext";
 import { FaHeadset } from "react-icons/fa"; 
 import '/src/styles/Navbar.css';
 import emailjs from 'emailjs-com';
-import questions from '../data/query'; 
+import questions from '../data/query';
 
 const Navbar = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -64,7 +64,7 @@ const Navbar = () => {
     }
     const token = localStorage.getItem("jwtToken");
     if (!token) {
-      toast.error("Session expired. Please log in again.");3
+      toast.error("Session expired. Please log in again.");
       return;
 
     }
@@ -74,11 +74,13 @@ const Navbar = () => {
       message: searchQuery,
     };
     
-    emailjs.send('service_h6ncw2r', 'template_cjebj34', templateParams, '83LfTWpqVM10PMLvl')
+    // emailjs.send('service_h6ncw2r', 'template_cjebj34', templateParams, '83LfTWpqVM10PMLvl')
+    emailjs.send('service_5ppnex4', 'template_934qho3', templateParams, 'WLAcpHtLHPUJQks9C')
         .then((response) => {
             console.log('SUCCESS!', response.status, response.text);
             toast.success("Your query has been sent to the admin!");
             setUserQuery("");
+            setIsSupportModalOpen(false)
         })
         .catch((err) => {
             console.error('FAILED...', err);
@@ -126,6 +128,9 @@ const Navbar = () => {
   const showPosition = async (position) => {
     const lat = position.coords.latitude;
     const lon = position.coords.longitude;
+
+    localStorage.setItem("lat", lat);
+    localStorage.setItem("lon", lon);
 
     try {
       const response = await fetch(
@@ -467,9 +472,9 @@ const Navbar = () => {
       {/* Dropdown */}
       {isDropdownOpen && isLoggedIn && (
         <div className="dropdown-menu">
-          <a href="#" className="dropdown-item">
+          {/* <a href="#" className="dropdown-item">
             Profile
-          </a>
+          </a> */}
           <a
             href="#"
             className="dropdown-item"

@@ -175,7 +175,6 @@ router.post('/verify-account', async (req, res) => {
     if(!existingUser){
       res.json({message: "User doesnt exists."})
     }
-
     if (OTP == existingUser.otp) {
       existingUser.isVerified = true;
       await existingUser.save();
