@@ -179,11 +179,11 @@ router.post('/verify-account', async (req, res) => {
     if (OTP == existingUser.otp) {
       existingUser.isVerified = true;
       await existingUser.save();
-      res.json({ success: true, message: 'OTP Verified Successfully!' });
+      res.status(201).json({ success: true, message: 'OTP Verified Successfully!' });
     } else {
-      res.json({ success: false, message: 'Invalid or expired OTP' });
+      res.status(202).json({ success: false, message: 'Invalid or expired OTP' });
     }
-
+ 
   }catch(err){
     res.status(500).json({ error: err.message });
     console.error(err.message);

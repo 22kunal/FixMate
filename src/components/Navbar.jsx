@@ -298,10 +298,13 @@ const Navbar = () => {
         }),
       });
       if (response.ok) {
-        setVerfiyModalOpen(false);
-        setIsSignUpModalOpen(false);
-        setIsSignInModalOpen(true);
-        toast.success("Account verified successfully");
+        const data = await response.json();
+        if(data.success){
+          setVerfiyModalOpen(false);
+          setIsSignUpModalOpen(false);
+          setIsSignInModalOpen(true);
+          toast.success(data.message);
+        }else toast.error(data.message);
       } else {
         toast.error("Account not verified");
       }

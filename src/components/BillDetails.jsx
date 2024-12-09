@@ -31,7 +31,12 @@ const BillDetails = () => {
   }
 
   const handleGoBack = () => {
-    navigate(-1);
+    if(isCustomer){
+      navigate("/History");
+    }
+    if(isVendor){
+      navigate("/ServiceWorker");
+    }
   };
 
   const handlePayment = async () => {
