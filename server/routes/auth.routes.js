@@ -1,10 +1,30 @@
 const express = require("express");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-
+require("dotenv").config({path: "./.env.local"});
 const router = express.Router();
 
-// Sign Up
+const nodemailer = require('nodemailer');
+const crypto = require('crypto');  
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  host: 'smtp.gmail.com',
+  port: 587,
+  secure: false,
+  type: "login",
+  auth: {
+    user: process.env.SMTP_EMAIL, 
+    pass: process.env.SMTP_PASS,   
+  },
+  tls: {
+    rejectUnauthorized: false
+  },
+  connectionTimeout: 5000,  
+  greetingTimeout: 3000,
+});
+
+// Sign Up Route with OTP
 router.post("/signup", async (req, res) => {
   const {
     name,
@@ -21,6 +41,8 @@ router.post("/signup", async (req, res) => {
       return res.status(400).json({ error: "Account already exists" });
     }
 
+    const otp = crypto.randomInt(100000, 999999); 
+
     const newUser = new User({
       name,
       email,
@@ -28,17 +50,41 @@ router.post("/signup", async (req, res) => {
       isVendor,
       yearsOfExperience: isVendor ? yearsOfExperience : undefined,
       fieldsOfExpertise: isVendor ? fieldsOfExpertise : undefined,
+      otp: otp,  
+      isVerified: false,
     });
 
-    await newUser.save();
+    // Send OTP email
+    const mailOptions = {
+      from: 'donotreplyl@gmail.com',  
+      to: email,                     
+      subject: 'Your OTP for FixMate Signup',
+      text: `Your OTP is: ${otp}..`,
+    };
 
-    res.status(201).json({ message: "User registered" });
+    transporter.sendMail(mailOptions, (err, info) => {
+      console.log(err)
+      if (err) {
+        console.log("Faled to send otp");
+      } else {
+        console.log('OTP sent: ' + info.response);
+      }
+    });
+
+    const user = await newUser.save();
+
+    if (!user.isVerified) {
+      res.status(201).json({ message: "Account not verified. Check your email for OTP" });
+    } else {
+      res.status(201).json({ message: "User registered" });
+    }
     console.log("User registered");
   } catch (err) {
     res.status(500).json({ error: err.message });
     console.error(err.message);
   }
 });
+
 // Sign In
 router.post("/signin", async (req, res) => {
   const { email, password } = req.body;
@@ -49,6 +95,8 @@ router.post("/signin", async (req, res) => {
     if (!user || !(await user.comparePassword(password))) {
       return res.status(400).json({ error: "Invalid credentials" });
     }
+
+    if(!user.isVerified) return res.status(403).json({error: "user not verified"});
 
     const token = jwt.sign(
       {
@@ -116,6 +164,30 @@ router.post('/validate', authenticateToken, (req, res) => {
       isAdmin: req.user.isAdmin,
     }
   ); 
+});
+
+router.post('/verify-account', async (req, res) => {
+  const { email, OTP } = req.body;
+
+  try{
+    const existingUser = await User.findOne({email});
+
+    if(!existingUser){
+      res.json({message: "User doesnt exists."})
+    }
+
+    if (OTP == existingUser.otp) {
+      existingUser.isVerified = true;
+      await existingUser.save();
+      res.json({ success: true, message: 'OTP Verified Successfully!' });
+    } else {
+      res.json({ success: false, message: 'Invalid or expired OTP' });
+    }
+
+  }catch(err){
+    res.status(500).json({ error: err.message });
+    console.error(err.message);
+  }
 });
 
 

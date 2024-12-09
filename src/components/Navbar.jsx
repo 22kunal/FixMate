@@ -16,6 +16,7 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [isSignUpModalOpen, setIsSignUpModalOpen] = useState(false);
+  const [verfiyModalOpen, setVerfiyModalOpen] = useState(false);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -63,7 +64,7 @@ const Navbar = () => {
     }
     const token = localStorage.getItem("jwtToken");
     if (!token) {
-      toast.error("Session expired. Please log in again.");
+      toast.error("Session expired. Please log in again.");3
       return;
 
     }
@@ -101,6 +102,7 @@ const Navbar = () => {
   const path = useLocation();
   const [active, setActive] = useState(path.pathname);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [OTP,setOTP] = useState();
   
   useEffect(() => {
     setActive(path.pathname);
@@ -197,10 +199,11 @@ const Navbar = () => {
         body: JSON.stringify({ email, password }),
       });
       if (response.ok) {
+        setIsSignUpModalOpen(false);
         const { token, name, isVendor, id, fieldsOfExpertise, isAdmin: admin } = await response.json();
         localStorage.setItem("jwtToken", token);
         handleLogin(token, name, id,isVendor,fieldsOfExpertise);
-        setVendor(isVendor); 
+        setVendor(isVendor);
         setUserName(name);
         setIsLoggedIn(true);
         setIsSignInModalOpen(false);
@@ -242,16 +245,42 @@ const Navbar = () => {
         }),
       });
       if (response.ok) {
+        toast.success("Please verify");
         setIsSignUpModalOpen(false);
-        setIsSignInModalOpen(true);
-        toast.success("Account created successfully");
+        setVerfiyModalOpen(true);
       } else {
-        toast.error("Account exists");
+        toast.error("Account not verified");
+        setVerfiyModalOpen(true);
       }
     } catch (error) {
       console.error("Error:", error);
     }
   };
+
+  const handleVerify = async()=>{
+    if(!OTP || OTP<=0) toast.error("OTP is invalid");
+
+    try {
+      const response = await fetch("http://localhost:5000/api/auth/verify-account", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          OTP
+        }),
+      });
+      if (response.ok) {
+        setVerfiyModalOpen(false);
+        setIsSignUpModalOpen(false);
+        setIsSignInModalOpen(true);
+        toast.success("Account verified successfully");
+      } else {
+        toast.error("Account not verified");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  }
 
   const toggleVendorCheckbox = () => {
     setIsVen(!isVen);
@@ -528,6 +557,32 @@ const Navbar = () => {
 
             <button className="modal-button" onClick={handleSignUp}>
               Sign Up
+            </button>
+          </div>
+        </div>
+      )}
+
+      {verfiyModalOpen && (
+        <div className="modal-overlay" onClick={()=>setVerfiyModalOpen(false) }>
+          <div
+            className="modal-content sign-in-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2>Verify your account</h2>
+            <input
+              type="Number"
+              placeholder="Enter your OTP"
+              className="sign-in-input"
+              value={OTP}
+              onChange={(e) => setOTP(e.target.value)}
+            />
+            <button className="modal-button" onClick={()=>{
+              setVerfiyModalOpen(false)
+            }}>
+              Cancel
+            </button>
+            <button className="modal-button" onClick={handleVerify}>
+              Verify
             </button>
           </div>
         </div>
