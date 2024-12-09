@@ -1,17 +1,24 @@
-import './App.css'
-import ServiceWorker from './components/ServiceWorker';
-import HomePage from './components/HomePage';
-import TopCategory from './components/TopCategory';
-import Footer from './components/Footer';
-import Navbar from './components/Navbar';
-import ComplainCreation from './components/ComplainCreation';
-import { BrowserRouter as Router,Route,Routes } from "react-router-dom";
-import { ToastContainer } from "react-toastify";
+import "./App.css";
+import ServiceWorker from "./components/ServiceWorker";
+import HomePage from "./components/HomePage";
+import TopCategory from "./components/TopCategory";
+import Footer from "./components/Footer";
+import Navbar from "./components/Navbar";
+import ComplainCreation from "./components/ComplainCreation";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  Navigate,
+} from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import History from './components/History';
-import BillDetails from './components/BillDetails';
-import Admin from './components/Admin';
-function App(){
+import History from "./components/History";
+import BillDetails from "./components/BillDetails";
+import Admin from "./components/Admin";
+
+function App() {
+
   return (
     <>
       <Router>
@@ -26,12 +33,47 @@ function App(){
               </>
             }
           />
-          <Route path="/ServiceWorker" element={<ServiceWorker />} />
-          <Route path="/History" element={<History />} />
-          <Route path="/ComplainCreation" element={<ComplainCreation />} />
-          <Route path="/BillDetails" element={<BillDetails />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/*" element={<NotFound />} />
+          <Route
+            path="/ServiceWorker"
+            element={
+              <ProtectedRoute roleType={"vendor"}>
+                <ServiceWorker />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/History"
+            element={
+              <ProtectedRoute roleType={"user"}>
+                <History />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/ComplainCreation"
+            element={
+              <ProtectedRoute roleType={"user"}>
+                <ComplainCreation />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/BillDetails"
+            element={
+              <ProtectedRoute roleType={["user", "vendor"]}>
+                <BillDetails />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <ProtectedRoute roleType={"admin"}>
+                <Admin />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<NotFound />} exact />
         </Routes>
         <Footer />
       </Router>
@@ -45,7 +87,7 @@ function App(){
       />
     </>
   );
-  }
+}
 
 export default App;
 
@@ -66,3 +108,31 @@ function NotFound() {
     </div>
   );
 }
+
+const getAuthDetails = () => {
+  const token = localStorage.getItem("jwtToken");
+  const role = localStorage.getItem("userRole");
+  return { token, role };
+};
+
+const ProtectedRoute = ({ children, roleType }) => {
+  const { token, role } = getAuthDetails();
+
+  if (!token) {
+    toast.error("You need to login first");
+    return <Navigate to="/" replace />;
+  }
+
+  if (Array.isArray(roleType)) {
+    if (!roleType.includes(role)) {
+      toast.error("Access denied");
+      return <Navigate to="/" replace />;
+    }
+  } else if (role !== roleType) {
+    toast.error("Access denied");
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+};
+

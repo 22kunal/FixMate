@@ -53,6 +53,10 @@ const billSchema = new mongoose.Schema(
       type: Date,
       default: Date.now,
     },
+    negotiatedAmount: {
+      type: Number,
+      default: null
+    },
   },
   {
     timestamps: true,
