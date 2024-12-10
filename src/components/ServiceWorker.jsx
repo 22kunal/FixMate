@@ -32,7 +32,36 @@ function ServiceWorker() {
     fetchData();
   }, [id]);
 
+
+  const handleDirectionClick = (work) => {
+    // Debugging - log lat/lon values
+    
+  const lat = parseFloat(work.lat.trim()); // Trim any whitespace
+  const lon = parseFloat(work.lon.trim());
+    console.log('Attempting navigation with lat/lon:', work.lat, work.lon);
+
+    // Safety check before navigation
+    if (isNaN(lat) || isNaN(lon)) {
+      console.error("Invalid coordinates:", lat, lon);
+      return;
+    }
+
+    if (lat < -90 || lat > 90 || lon < -180 || lon > 180) {
+      console.error("Coordinates out of range:", lat, lon);
+      return; // Exit the function if coordinates are out of range
+  }
+  
+    console.log('Navigating to Direction with lat/lon:', lat, lon); // Debugging line
+    navigate('/direction', { state: { lat, lon } });
+  };
+
+
   const [selectedImage, setSelectedImage] = useState(null);
+//Handling Directions 
+  // const handleDirectionClick = (work) => {
+  //   navigate('/direction', { state: { lat: parseFloat(work.lat), lon: parseFloat(work.lon) } });
+  // };
+
 
   const handleImageClick = (imagePath) => {
     setSelectedImage(imagePath);
@@ -160,11 +189,7 @@ function ServiceWorker() {
                       <>
                         <button
                           className="btn-direction bg-green-500"
-                          onClick={() =>
-                            navigate("/Direction", {
-                              state: { workDetails: work },
-                            })
-                          }
+                          onClick={() => handleDirectionClick(work)}
                         >
                           Directions
                         </button>

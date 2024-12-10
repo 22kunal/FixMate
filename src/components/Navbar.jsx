@@ -74,8 +74,8 @@ const Navbar = () => {
       message: searchQuery,
     };
     
-    // emailjs.send('service_h6ncw2r', 'template_cjebj34', templateParams, '83LfTWpqVM10PMLvl')
-    emailjs.send('service_5ppnex4', 'template_934qho3', templateParams, 'WLAcpHtLHPUJQks9C')
+    emailjs.send('service_h6ncw2r', 'template_cjebj34', templateParams, '83LfTWpqVM10PMLvl')
+    //emailjs.send('service_5ppnex4', 'template_934qho3', templateParams, 'WLAcpHtLHPUJQks9C')
         .then((response) => {
             console.log('SUCCESS!', response.status, response.text);
             toast.success("Your query has been sent to the admin!");
