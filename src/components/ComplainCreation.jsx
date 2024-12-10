@@ -2,6 +2,8 @@ import React, { useContext, useState, useEffect } from "react";
 import '../styles/ComplainCreation.css';
 import { toast } from "react-toastify";
 import { AuthContext } from "../context/AuthContext";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 const ComplainForm = () => {
   const { id } = useContext(AuthContext);
@@ -14,8 +16,13 @@ const ComplainForm = () => {
     description: "",
     photo: null,
     fieldType: "electrician",
+    lat: null, // Add latitude
+    lon: null, // Add longitude
   });
   const [imagePreview, setImagePreview] = useState(null);
+  const [map, setMap] = useState(null);
+  const [marker, setMarker] = useState(null);
+
 
   useEffect(() => {
     setFormData((prevData) => ({
@@ -24,6 +31,34 @@ const ComplainForm = () => {
     }))
   }, [id])
   
+
+  useEffect(() => {
+    const mapInstance = L.map("map").setView([20.5937, 78.9629], 5); // Default view set to India
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    }).addTo(mapInstance);
+
+    const newMarker = L.marker([20.5937, 78.9629], { draggable: true }).addTo(mapInstance);
+
+    newMarker.on("dragend", () => {
+      const { lat, lng } = newMarker.getLatLng();
+      setFormData((prevData) => ({
+        ...prevData,
+        lat: lat,
+        lon: lng,
+      }));
+      toast.info(`Location updated: ${lat}, ${lng}`);
+    });
+
+    setMap(mapInstance);
+    setMarker(newMarker);
+
+    return () => {
+      mapInstance.remove();
+    };
+  }, []);
+
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -44,8 +79,55 @@ const ComplainForm = () => {
     }
   };
 
+
+  //API GETTING DESIRED LOCATION
+  const fetchCoordinates = async (address) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+      );
+      const data = await response.json();
+      if (data.length > 0) {
+        return { lat: data[0].lat, lon: data[0].lon };
+      }
+      return null;
+    } catch (error) {
+      console.error("Error fetching coordinates:", error);
+      return null;
+    }
+  };
+
+  // const getCurrentLocation = () => {
+  //   return new Promise((resolve, reject) => {
+  //     if (navigator.geolocation) {
+  //       navigator.geolocation.getCurrentPosition(
+  //         (position) => {
+  //           resolve({
+  //             lat: position.coords.latitude,
+  //             lon: position.coords.longitude,
+  //           });
+  //         },
+  //         (error) => {
+  //           reject(error);
+  //         }
+  //       );
+  //     } else {
+  //       reject(new Error("Geolocation is not supported by this browser."));
+  //     }
+  //   });
+  // };
+
   const handleSubmit = async(e) => {
     e.preventDefault();
+
+    //let coordinates = await fetchCoordinates(formData.address);
+
+    if (!formData.lat || !formData.lon) {
+      toast.error("Please select a location on the map.");
+      return;
+    }
+
+
       const form = new FormData();
 
 
@@ -56,8 +138,8 @@ const ComplainForm = () => {
       form.append("address", formData.address);
       form.append("description", formData.description);
       form.append("fieldType", formData.fieldType);
-      form.append("lat",localStorage.getItem("lat"));
-      form.append("lon",localStorage.getItem("lon"))
+      form.append("lat", formData.lat);
+      form.append("lon", formData.lon);
 
       console.log(form)
     
@@ -78,6 +160,8 @@ const ComplainForm = () => {
           description: "",
           photo: null,
           fieldType: "electrician",
+          lat: null,
+          lon: null,
         });
         setImagePreview(null);
         toast.success("Complain submitted successfully");
@@ -86,6 +170,7 @@ const ComplainForm = () => {
       }
     } catch (error) {
       console.error("Error submitting complain:", error);
+      toast.error("Failed to submit complain");
     }
   };
 
@@ -134,14 +219,43 @@ const ComplainForm = () => {
 
             <div className="complain_address">
               <h2>Address:</h2>
-              <input
-                type="text"
-                placeholder="Enter your address"
-                name="address"
-                value={formData.address}
-                onChange={handleInputChange}
-              />
+              <div className="address_input flex my-4">
+                <input
+                  type="text"
+                  placeholder="Enter your address"
+                  name="address"
+                  value={formData.address}
+                  onChange={handleInputChange}
+                  className="h-12"
+                />
+                <button
+                  className="fetch-location-btn h-12 w-20 ms-2"
+                  type="button"
+                  onClick={async () => {
+                    const coordinates = await fetchCoordinates(formData.address);
+                    if (coordinates) {
+                      const { lat, lon } = coordinates;
+                      setFormData((prevData) => ({
+                        ...prevData,
+                        lat,
+                        lon,
+                      }));
+                      if (marker) {
+                        marker.setLatLng([lat, lon]); // Update marker position
+                        map.setView([lat, lon], 15); // Center the map on the new location
+                      }
+                      toast.info(`Location updated to ${lat}, ${lon}`);
+                    } else {
+                      toast.error("Address not found. Please try a different address.");
+                    }
+                  }}
+                >
+                  Fetch
+                </button>
+              </div>
+              <div id="map" style={{ height: "200px", width: "100%" }}></div>
             </div>
+
 
             <div className="complain_description">
               <h2>Description:</h2>
