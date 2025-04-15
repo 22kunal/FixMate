@@ -1,5 +1,5 @@
 import React, { useContext, useState } from "react";
-import { Users, FileText, Globe, DollarSign } from "lucide-react";
+import { Users, FileText, Globe, IndianRupee } from "lucide-react";
 import {
   PieChart,
   Pie,
@@ -241,7 +241,7 @@ const AdminDashboard = () => {
                 color="bg-blue-500"
               />
               <MetricBox
-                icon={DollarSign}
+                icon={IndianRupee}
                 label="Payments"
                 value={metrics.Payments}
                 color="bg-yellow-500"

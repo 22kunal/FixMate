@@ -5,6 +5,15 @@ import { AuthContext } from "../context/AuthContext";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+
+const isWithinIndiaBounds = (lat, lon) => {
+  const minLat = 6; // Minimum latitude for India
+  const maxLat = 37.6; // Maximum latitude for India
+  const minLon = 68; // Minimum longitude for India
+  const maxLon = 97; // Maximum longitude for India
+
+  return lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon;
+};
 const ComplainForm = () => {
   const { id } = useContext(AuthContext);
 
@@ -29,7 +38,7 @@ const ComplainForm = () => {
       ...prevData,
       id: id
     }))
-  }, [id])
+  }, [])
   
 
   useEffect(() => {
@@ -42,12 +51,17 @@ const ComplainForm = () => {
 
     newMarker.on("dragend", () => {
       const { lat, lng } = newMarker.getLatLng();
-      setFormData((prevData) => ({
-        ...prevData,
-        lat: lat,
-        lon: lng,
+      if (isWithinIndiaBounds(lat, lng)) {
+        setFormData((prevData) => ({
+          ...prevData,
+          lat: lat,
+          lon: lng,
       }));
       toast.info(`Location updated: ${lat}, ${lng}`);
+      } else {
+        toast.error("Selected location is outside India. Please select a valid location.");
+        newMarker.setLatLng([20.5937, 78.9629]); // Reset marker back to the default location
+      }
     });
 
     setMap(mapInstance);
@@ -235,16 +249,20 @@ const ComplainForm = () => {
                     const coordinates = await fetchCoordinates(formData.address);
                     if (coordinates) {
                       const { lat, lon } = coordinates;
-                      setFormData((prevData) => ({
-                        ...prevData,
-                        lat,
-                        lon,
-                      }));
+                      if (isWithinIndiaBounds(lat, lon)) {
+                        setFormData((prevData) => ({
+                          ...prevData,
+                          lat,
+                          lon,
+                        }));
                       if (marker) {
                         marker.setLatLng([lat, lon]); // Update marker position
                         map.setView([lat, lon], 15); // Center the map on the new location
                       }
                       toast.info(`Location updated to ${lat}, ${lon}`);
+                    } else {
+                      toast.error("Address not found. Please try a different address.");
+                    }
                     } else {
                       toast.error("Address not found. Please try a different address.");
                     }
